@@ -1,0 +1,9 @@
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/uninstall.dir
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/chopped_urdf_v2_uninstall.dir
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/test.dir
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/edit_cache.dir
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/rebuild_cache.dir
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/list_install_components.dir
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/install.dir
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/install/local.dir
+/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/CMakeFiles/install/strip.dir

@@ -1,0 +1,95 @@
+[0.014s] Invoking command in '/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake /home/sarina/aot_bot/ros2_ws/src/chopped_urdf_v2 -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2
+[0.402s] -- The C compiler identification is GNU 13.3.0
+[1.159s] -- The CXX compiler identification is GNU 13.3.0
+[1.655s] -- Detecting C compiler ABI info
+[1.990s] -- Detecting C compiler ABI info - done
+[2.001s] -- Check for working C compiler: /usr/bin/cc - skipped
+[2.011s] -- Detecting C compile features
+[2.012s] -- Detecting C compile features - done
+[2.188s] -- Detecting CXX compiler ABI info
+[2.567s] -- Detecting CXX compiler ABI info - done
+[2.578s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[2.578s] -- Detecting CXX compile features
+[2.579s] -- Detecting CXX compile features - done
+[2.585s] -- Found ament_cmake: 2.5.6 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[2.808s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[2.960s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[3.171s] -- Configuring done (3.1s)
+[3.176s] -- Generating done (0.0s)
+[3.178s] -- Build files have been written to: /home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2
+[3.186s] Invoked command in '/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake /home/sarina/aot_bot/ros2_ws/src/chopped_urdf_v2 -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2
+[3.188s] Invoking command in '/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2 -- -j12 -l12
+[3.240s] Invoked command in '/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2 -- -j12 -l12
+[3.253s] Invoking command in '/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --install /home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2
+[3.264s] -- Install configuration: ""
+[3.265s] -- Execute custom install script
+[3.269s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/urdf/chopped_urdf_v2.gazebo.urdf.xacro
+[3.281s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/urdf/chopped_urdf_v2.urdf
+[3.296s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Base_Extrusion__Base_Extrusion.stl
+[3.307s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Base_Extrusion__Base_Extrusion__Base_Extrusion__Base_Extrusion.stl
+[3.320s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Base_Plate__Base_Plate.stl
+[3.333s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Base_Print__Base_Print.stl
+[3.346s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Battery_Terminal__Battery_Terminal.stl
+[3.360s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Bicep_Cover__Bicep_Cover.stl
+[3.373s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Bicep_Cover__Bicep_Cover_Mirrored.stl
+[3.387s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Bicep__Bicep.stl
+[3.400s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Bicep__Bicep_Mirrored.stl
+[3.411s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Bottom_Cover_Back__Bottom_Cover_Back__Bottom_Cover_Back__Bottom_Cover_Back.stl
+[3.423s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Bottom_Cover_Front__Bottom_Cover_Front__Bottom_Cover_Front__Bottom_Cover_Front.stl
+[3.435s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Camera_Cover__Camera_Cover__Camera_Cover__Camera_Cover.stl
+[3.447s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Cover_MiddleBot_Back__Cover_MiddleBot_Back__Cover_MiddleBot_Back__Cover_MiddleBot_Back.stl
+[3.457s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Cover_MiddleBot_Front__Cover_MiddleBot_Front__Cover_MiddleBot_Front__Cover_MiddleBot_Front.stl
+[3.469s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Cover_MiddleTop_Back__Cover_MiddleTop_Back__Cover_MiddleTop_Back__Cover_MiddleTop_Back.stl
+[3.481s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Cover_MiddleTop_Front__Cover_MiddleTop_Front__Cover_MiddleTop_Front__Cover_MiddleTop_Front.stl
+[3.492s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Cover_Top_Front__Cover_Top_Front__Cover_Top_Front__Cover_Top_Front.stl
+[3.505s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Forearm_Cover__Forearm_Cover.stl
+[3.516s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Forearm_Cover__Forearm_Cover_Mirrored.stl
+[3.527s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Forearm_Rotation__Forearm_Rotation.stl
+[3.539s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Forearm_Rotation__Forearm_Rotation_Mirrored.stl
+[3.553s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Forearm__Forearm.stl
+[3.566s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Forearm__Forearm_Mirrored.stl
+[3.577s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Hand_Motor_Mount__Hand_Motor_Mount.stl
+[3.590s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Hand_Motor_Mount__Hand_Motor_Mount_Mirrored.stl
+[3.603s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Hand__Hand.stl
+[3.615s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Hand__Hand_Mirrored.stl
+[3.627s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Head_Cover__Head_Cover__Head_Cover__Head_Cover.stl
+[3.638s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Head__Head__Head__Head.stl
+[3.650s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Left_Finger__Left_Finger.stl
+[3.661s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Left_Finger__Left_Finger_Mirrored.stl
+[3.673s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Left_Wheel_Tire__Left_Wheel_Tire.stl
+[3.684s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Left_wheel_cap__Left_wheel_cap.stl
+[3.697s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Main_Extrusion__Main_Extrusion__Main_Extrusion__Main_Extrusion.stl
+[3.710s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Mirror30__Mirror30.stl
+[3.723s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Right_Finger__Right_Finger.stl
+[3.735s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Right_Finger__Right_Finger_Mirrored.stl
+[3.748s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Right_Wheel_Cap__Right_Wheel_Cap.stl
+[3.761s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Right_Wheel_Tire__Right_Wheel_Tire.stl
+[3.773s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Shoulder_Cover__Shoulder_Cover.stl
+[3.786s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Shoulder_Cover__Shoulder_Cover_Mirrored.stl
+[3.798s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Shoulder_Knuckle__Shoulder_Knuckle.stl
+[3.810s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Shoulder_Knuckle__Shoulder_Knuckle_Mirrored.stl
+[3.821s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Shoulder__Shoulder.stl
+[3.833s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Shoulder__Shoulder_Mirrored.stl
+[3.844s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Top_Cover_back__Top_Cover_back__Top_Cover_back__Top_Cover_back.stl
+[3.856s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Wrist_Cam__Wrist_Cam.stl
+[3.867s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Wrist_Cam__Wrist_Cam_Mirrored.stl
+[3.880s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Wrist_Knuckle__Wrist_Knuckle.stl
+[3.891s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/meshes/Wrist_Knuckle__Wrist_Knuckle_Mirrored.stl
+[3.911s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/config/controllers.yaml
+[3.925s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/launch/chopped_urdf_v2.launch
+[3.937s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/ament_index/resource_index/package_run_dependencies/chopped_urdf_v2
+[3.954s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/ament_index/resource_index/parent_prefix_path/chopped_urdf_v2
+[3.968s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/environment/ament_prefix_path.sh
+[3.980s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/environment/ament_prefix_path.dsv
+[3.992s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/environment/path.sh
+[4.004s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/environment/path.dsv
+[4.016s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/local_setup.bash
+[4.028s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/local_setup.sh
+[4.040s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/local_setup.zsh
+[4.053s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/local_setup.dsv
+[4.067s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/package.dsv
+[4.080s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/ament_index/resource_index/packages/chopped_urdf_v2
+[4.093s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/cmake/chopped_urdf_v2Config.cmake
+[4.104s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/cmake/chopped_urdf_v2Config-version.cmake
+[4.117s] -- Symlinking: /home/sarina/aot_bot/ros2_ws/install/chopped_urdf_v2/share/chopped_urdf_v2/package.xml
+[4.134s] Invoked command in '/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --install /home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2
