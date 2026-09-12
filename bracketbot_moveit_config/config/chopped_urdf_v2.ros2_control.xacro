@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<!--
+  ros2_control mock hardware for every actuated joint. The mimic finger
+  joints (right_right_gripper, left_right_gripper) get state interfaces
+  only: ros2_control reads the <mimic> tag from the URDF and rejects mimic
+  joints that also declare command interfaces.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:macro name="chopped_urdf_v2_ros2_control" params="name">
+        <ros2_control name="${name}" type="system">
+            <hardware>
+                <plugin>mock_components/GenericSystem</plugin>
+            </hardware>
+            <joint name="rj0">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="rj1">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="rj2">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="rj3">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="rj4">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="rj5">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="rj6">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="right_left_gripper">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="lj0">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="lj1">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="lj2">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="lj3">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="lj4">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="lj5">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="lj6">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="left_left_gripper">
+                <command_interface name="position" />
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="right_right_gripper">
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+            <joint name="left_right_gripper">
+                <state_interface name="position">
+                    <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="velocity" />
+            </joint>
+        </ros2_control>
+    </xacro:macro>
+</robot>

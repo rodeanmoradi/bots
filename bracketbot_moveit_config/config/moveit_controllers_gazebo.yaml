@@ -1,0 +1,33 @@
+# How MoveIt hands planned trajectories to controllers — Gazebo case.
+# Mirrors chopped_urdf_v2/config/controllers.yaml: one controller per arm that
+# also owns both finger joints. MoveIt's arm/gripper groups each cover a subset
+# of a controller's joints, which JointTrajectoryController only accepts with
+# allow_partial_joints_goal: true (set in that file).
+#
+# Note: gz-sim's dartsim ignores <mimic>, so a right_gripper plan moves only
+# right_left_gripper in Gazebo; the other finger stays put.
+moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+
+moveit_simple_controller_manager:
+  controller_names:
+    - right_arm_controller
+    - left_arm_controller
+
+  right_arm_controller:
+    type: FollowJointTrajectory
+    action_ns: follow_joint_trajectory
+    default: true
+    joints: [rj0, rj1, rj2, rj3, rj4, rj5, rj6, right_left_gripper, right_right_gripper]
+
+  left_arm_controller:
+    type: FollowJointTrajectory
+    action_ns: follow_joint_trajectory
+    default: true
+    joints: [lj0, lj1, lj2, lj3, lj4, lj5, lj6, left_left_gripper, left_right_gripper]
+
+# Physics lags behind the commanded path a bit; be lenient so executions
+# aren't aborted as PATH_TOLERANCE_VIOLATED.
+trajectory_execution:
+  allowed_execution_duration_scaling: 2.0
+  allowed_goal_duration_margin: 2.0
+  allowed_start_tolerance: 0.05

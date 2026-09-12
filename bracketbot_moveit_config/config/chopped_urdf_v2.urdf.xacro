@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  robot_description for MoveIt: the plain Onshape URDF (visual meshes only, no
+  collision geometry — so no self-collision matrix is needed and planning
+  works out of the box) plus a ros2_control block backed by mock hardware.
+
+  The mock block is ignored when move_group is attached to the Gazebo sim; the
+  gz_ros2_control plugin in chopped_urdf_v2.gazebo.urdf.xacro drives the joints
+  there instead.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="chopped_urdf_v2">
+    <xacro:include filename="$(find chopped_urdf_v2)/urdf/chopped_urdf_v2.urdf" />
+    <xacro:include filename="chopped_urdf_v2.ros2_control.xacro" />
+    <xacro:chopped_urdf_v2_ros2_control name="MockSystem" />
+</robot>

@@ -1,0 +1,32 @@
+# Velocity/acceleration limits used for trajectory timing. These override the
+# URDF's values (10 rad/s, which is not a real limit) with something that
+# looks like a therapy demonstration rather than a whip. Position limits still
+# come from the URDF.
+#
+# Scaling factors apply on top; RViz's MotionPlanning panel can raise them per
+# request (<= 1.0).
+default_velocity_scaling_factor: 0.5
+default_acceleration_scaling_factor: 0.5
+
+joint_limits:
+  # mast lift (prismatic, m/s)
+  rj0: {has_velocity_limits: true, max_velocity: 0.3, has_acceleration_limits: true, max_acceleration: 0.5}
+  lj0: {has_velocity_limits: true, max_velocity: 0.3, has_acceleration_limits: true, max_acceleration: 0.5}
+  # arm joints (rad/s)
+  rj1: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  rj2: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  rj3: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  rj4: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  rj5: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  rj6: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  lj1: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  lj2: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  lj3: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  lj4: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  lj5: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  lj6: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  # grippers
+  right_left_gripper:  {has_velocity_limits: true, max_velocity: 1.0, has_acceleration_limits: true, max_acceleration: 2.0}
+  right_right_gripper: {has_velocity_limits: true, max_velocity: 1.0, has_acceleration_limits: true, max_acceleration: 2.0}
+  left_left_gripper:   {has_velocity_limits: true, max_velocity: 1.0, has_acceleration_limits: true, max_acceleration: 2.0}
+  left_right_gripper:  {has_velocity_limits: true, max_velocity: 1.0, has_acceleration_limits: true, max_acceleration: 2.0}

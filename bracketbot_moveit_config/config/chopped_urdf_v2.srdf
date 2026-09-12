@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Semantic description for MoveIt. Planning groups:
+    right_arm / left_arm   7-DOF chains: mast lift (rj0/lj0, prismatic) plus
+                           the six revolute arm joints, arm_base -> *_eef.
+    right_gripper / left_gripper   one active joint each; the second finger
+                           mimics it in the URDF, so MoveIt treats it as passive.
+    both_arms              right_arm + left_arm, for bimanual planning.
+
+  No <disable_collisions> section: the URDF this config loads has no collision
+  geometry, so MoveIt has nothing to self-collide. To turn collision checking
+  on, switch the include in chopped_urdf_v2.urdf.xacro to the .gazebo variant
+  (which has collision meshes) and regenerate the matrix with
+  `ros2 launch bracketbot_moveit_config setup_assistant.launch.py`.
+-->
+<robot name="chopped_urdf_v2">
+
+    <group name="right_arm">
+        <chain base_link="arm_base" tip_link="right_eef" />
+    </group>
+    <group name="left_arm">
+        <chain base_link="arm_base" tip_link="left_eef" />
+    </group>
+    <group name="both_arms">
+        <group name="right_arm" />
+        <group name="left_arm" />
+    </group>
+
+    <group name="right_gripper">
+        <joint name="right_left_gripper" />
+    </group>
+    <group name="left_gripper">
+        <joint name="left_left_gripper" />
+    </group>
+
+    <end_effector name="right_hand" parent_link="right_eef" group="right_gripper" parent_group="right_arm" />
+    <end_effector name="left_hand"  parent_link="left_eef"  group="left_gripper"  parent_group="left_arm" />
+
+    <!-- Named poses. Zero is the URDF's neutral configuration. -->
+    <group_state name="home" group="right_arm">
+        <joint name="rj0" value="0" />
+        <joint name="rj1" value="0" />
+        <joint name="rj2" value="0" />
+        <joint name="rj3" value="0" />
+        <joint name="rj4" value="0" />
+        <joint name="rj5" value="0" />
+        <joint name="rj6" value="0" />
+    </group_state>
+    <group_state name="home" group="left_arm">
+        <joint name="lj0" value="0" />
+        <joint name="lj1" value="0" />
+        <joint name="lj2" value="0" />
+        <joint name="lj3" value="0" />
+        <joint name="lj4" value="0" />
+        <joint name="lj5" value="0" />
+        <joint name="lj6" value="0" />
+    </group_state>
+    <group_state name="open" group="right_gripper">
+        <joint name="right_left_gripper" value="1" />
+    </group_state>
+    <group_state name="closed" group="right_gripper">
+        <joint name="right_left_gripper" value="0" />
+    </group_state>
+    <group_state name="open" group="left_gripper">
+        <joint name="left_left_gripper" value="1" />
+    </group_state>
+    <group_state name="closed" group="left_gripper">
+        <joint name="left_left_gripper" value="0" />
+    </group_state>
+
+</robot>

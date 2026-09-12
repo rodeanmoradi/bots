@@ -28,6 +28,9 @@ right_arm_controller:
     state_interfaces:
       - position
       - velocity
+    # MoveIt plans per group (arm vs. gripper) but this controller owns both;
+    # accept goals that name only a subset of the joints.
+    allow_partial_joints_goal: true
 
 left_arm_controller:
   ros__parameters:
@@ -46,3 +49,6 @@ left_arm_controller:
     state_interfaces:
       - position
       - velocity
+    # MoveIt plans per group (arm vs. gripper) but this controller owns both;
+    # accept goals that name only a subset of the joints.
+    allow_partial_joints_goal: true

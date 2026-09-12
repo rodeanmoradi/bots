@@ -1,0 +1,20 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: chopped_urdf_v2
+    relative_path: urdf/chopped_urdf_v2.urdf
+    xacro_args: ""
+  srdf:
+    relative_path: config/chopped_urdf_v2.srdf
+  package_settings:
+    author_name: Rodean Moradi
+    author_email: rodean.moradi@gmail.com
+    generated_timestamp: 1789171200
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
