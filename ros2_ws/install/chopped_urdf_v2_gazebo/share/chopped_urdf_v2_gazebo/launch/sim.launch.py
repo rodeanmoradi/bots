@@ -1,1 +1,0 @@
-/home/sarina/aot_bot/ros2_ws/src/chopped_urdf_v2_gazebo/launch/sim.launch.py

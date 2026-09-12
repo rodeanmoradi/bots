@@ -1,1 +1,0 @@
-robot_state_publisher;joint_state_publisher_gui;xacro;tf2_ros;rviz2;ros_gz_sim;ros2_control;ros2_controllers;gz_ros2_control

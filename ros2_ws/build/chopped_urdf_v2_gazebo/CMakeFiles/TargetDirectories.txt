@@ -1,9 +1,0 @@
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/uninstall.dir
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/chopped_urdf_v2_gazebo_uninstall.dir
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/test.dir
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/edit_cache.dir
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/rebuild_cache.dir
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/list_install_components.dir
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/install.dir
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/install/local.dir
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2_gazebo/CMakeFiles/install/strip.dir

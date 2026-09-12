@@ -1,1 +1,0 @@
-/home/sarina/aot_bot/ros2_ws/build/chopped_urdf_v2/ament_cmake_environment_hooks/local_setup.sh
