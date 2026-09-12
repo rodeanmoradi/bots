@@ -1,0 +1,66 @@
+{
+  "session": "p1_throw_ball_20260912-164039",
+  "subject": "p1",
+  "action": "throw_ball",
+  "side": "right",
+  "view": "side",
+  "created": "2026-09-12T16:41:36",
+  "note": "Reference motion comes from Gazebo, not from this file. These are the human attempts, in order.",
+  "takes": [
+    {
+      "file": "take_01_a000.json",
+      "attempt": 1,
+      "correction_pct": 0,
+      "duration": 1.008,
+      "n_samples": 18,
+      "warnings": [
+        "hand not seen on 100% of frames - claw is unreliable",
+        "claw never changed state - no release captured"
+      ]
+    },
+    {
+      "file": "take_02_a025.json",
+      "attempt": 2,
+      "correction_pct": 25,
+      "duration": 1.27,
+      "n_samples": 22,
+      "warnings": [
+        "hand not seen on 100% of frames - claw is unreliable",
+        "claw never changed state - no release captured"
+      ]
+    },
+    {
+      "file": "take_03_a050.json",
+      "attempt": 3,
+      "correction_pct": 50,
+      "duration": 1.527,
+      "n_samples": 26,
+      "warnings": [
+        "hand not seen on 100% of frames - claw is unreliable",
+        "claw never changed state - no release captured"
+      ]
+    },
+    {
+      "file": "take_04_a075.json",
+      "attempt": 4,
+      "correction_pct": 75,
+      "duration": 1.427,
+      "n_samples": 25,
+      "warnings": [
+        "hand not seen on 100% of frames - claw is unreliable",
+        "claw never changed state - no release captured"
+      ]
+    },
+    {
+      "file": "take_05_a100.json",
+      "attempt": 5,
+      "correction_pct": 100,
+      "duration": 0.961,
+      "n_samples": 17,
+      "warnings": [
+        "hand not seen on 100% of frames - claw is unreliable",
+        "claw never changed state - no release captured"
+      ]
+    }
+  ]
+}

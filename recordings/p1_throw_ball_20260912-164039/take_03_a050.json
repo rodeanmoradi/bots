@@ -1,0 +1,493 @@
+{
+  "session": "p1_throw_ball_20260912-164039",
+  "subject": "p1",
+  "action": "throw_ball",
+  "side": "right",
+  "view": "side",
+  "attempt": 3,
+  "correction_pct": 50,
+  "recorded": "2026-09-12T16:41:20",
+  "duration": 1.527,
+  "n_samples": 26,
+  "points": [
+    "shoulder",
+    "elbow",
+    "hand"
+  ],
+  "units": "torso lengths (hip midpoint to shoulder midpoint = 1.0), origin at hip midpoint",
+  "axes": {
+    "x": 2,
+    "y": 1,
+    "note": "torso axis indices: 0 = lateral (+ve towards the tracked arm), 1 = up, 2 = forward"
+  },
+  "samples": [
+    {
+      "t": 0.0,
+      "shoulder": [
+        -0.0,
+        0.99634
+      ],
+      "elbow": [
+        -0.09983,
+        0.75341
+      ],
+      "hand": [
+        -0.29828,
+        1.02348
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.0593,
+      "shoulder": [
+        -0.0,
+        0.99576
+      ],
+      "elbow": [
+        -0.08682,
+        0.73773
+      ],
+      "hand": [
+        -0.29035,
+        0.98999
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.124,
+      "shoulder": [
+        0.0,
+        0.99521
+      ],
+      "elbow": [
+        -0.07837,
+        0.72098
+      ],
+      "hand": [
+        -0.28863,
+        0.95767
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.181,
+      "shoulder": [
+        0.0,
+        0.99468
+      ],
+      "elbow": [
+        -0.07856,
+        0.71113
+      ],
+      "hand": [
+        -0.29867,
+        0.94437
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.2431,
+      "shoulder": [
+        0.0,
+        0.99418
+      ],
+      "elbow": [
+        -0.08013,
+        0.70499
+      ],
+      "hand": [
+        -0.30838,
+        0.93698
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.3079,
+      "shoulder": [
+        0.0,
+        0.99385
+      ],
+      "elbow": [
+        -0.08293,
+        0.70313
+      ],
+      "hand": [
+        -0.3167,
+        0.93602
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.3735,
+      "shoulder": [
+        0.0,
+        0.9936
+      ],
+      "elbow": [
+        -0.08389,
+        0.70061
+      ],
+      "hand": [
+        -0.3248,
+        0.93555
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.4413,
+      "shoulder": [
+        0.0,
+        0.99326
+      ],
+      "elbow": [
+        -0.0873,
+        0.70182
+      ],
+      "hand": [
+        -0.33937,
+        0.94012
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.5067,
+      "shoulder": [
+        0.0,
+        0.99334
+      ],
+      "elbow": [
+        -0.08944,
+        0.70389
+      ],
+      "hand": [
+        -0.34913,
+        0.94052
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.5686,
+      "shoulder": [
+        0.0,
+        0.99339
+      ],
+      "elbow": [
+        -0.0898,
+        0.70603
+      ],
+      "hand": [
+        -0.35616,
+        0.94118
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.6279,
+      "shoulder": [
+        0.0,
+        0.99357
+      ],
+      "elbow": [
+        -0.08928,
+        0.70797
+      ],
+      "hand": [
+        -0.36153,
+        0.94194
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.6891,
+      "shoulder": [
+        0.0,
+        0.99368
+      ],
+      "elbow": [
+        -0.09138,
+        0.7106
+      ],
+      "hand": [
+        -0.37178,
+        0.94885
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.7484,
+      "shoulder": [
+        0.0,
+        0.99276
+      ],
+      "elbow": [
+        -0.10444,
+        0.74236
+      ],
+      "hand": [
+        -0.38939,
+        1.02132
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.8079,
+      "shoulder": [
+        0.0,
+        0.98936
+      ],
+      "elbow": [
+        -0.12949,
+        0.7967
+      ],
+      "hand": [
+        -0.38692,
+        1.08794
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.8681,
+      "shoulder": [
+        0.0,
+        0.98541
+      ],
+      "elbow": [
+        -0.16231,
+        0.86689
+      ],
+      "hand": [
+        -0.39059,
+        1.19354
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.9285,
+      "shoulder": [
+        0.0,
+        0.98391
+      ],
+      "elbow": [
+        -0.18851,
+        0.91962
+      ],
+      "hand": [
+        -0.38975,
+        1.27345
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 0.989,
+      "shoulder": [
+        0.0,
+        0.98701
+      ],
+      "elbow": [
+        -0.2085,
+        0.96553
+      ],
+      "hand": [
+        -0.37025,
+        1.33579
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.0461,
+      "shoulder": [
+        0.0,
+        0.9907
+      ],
+      "elbow": [
+        -0.22833,
+        1.02185
+      ],
+      "hand": [
+        -0.37334,
+        1.42459
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.1056,
+      "shoulder": [
+        0.0,
+        0.99352
+      ],
+      "elbow": [
+        -0.23079,
+        1.06258
+      ],
+      "hand": [
+        -0.39352,
+        1.46291
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.1661,
+      "shoulder": [
+        0.0,
+        0.99421
+      ],
+      "elbow": [
+        -0.23291,
+        1.10224
+      ],
+      "hand": [
+        -0.44979,
+        1.48735
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.2246,
+      "shoulder": [
+        0.0,
+        0.99338
+      ],
+      "elbow": [
+        -0.24986,
+        1.13713
+      ],
+      "hand": [
+        -0.54456,
+        1.50053
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.2824,
+      "shoulder": [
+        0.0,
+        0.99234
+      ],
+      "elbow": [
+        -0.26778,
+        1.15274
+      ],
+      "hand": [
+        -0.63546,
+        1.48319
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.3422,
+      "shoulder": [
+        0.0,
+        0.9906
+      ],
+      "elbow": [
+        -0.27883,
+        1.16225
+      ],
+      "hand": [
+        -0.71489,
+        1.46004
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.4069,
+      "shoulder": [
+        0.0,
+        0.98863
+      ],
+      "elbow": [
+        -0.28789,
+        1.16148
+      ],
+      "hand": [
+        -0.77357,
+        1.4351
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.4673,
+      "shoulder": [
+        -0.0,
+        0.98728
+      ],
+      "elbow": [
+        -0.29433,
+        1.16183
+      ],
+      "hand": [
+        -0.807,
+        1.41703
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    },
+    {
+      "t": 1.527,
+      "shoulder": [
+        -0.0,
+        0.98644
+      ],
+      "elbow": [
+        -0.30332,
+        1.15884
+      ],
+      "hand": [
+        -0.82326,
+        1.39692
+      ],
+      "claw_open": false,
+      "aperture": 0.2578,
+      "grip_valid": false
+    }
+  ]
+}
