@@ -1,8 +1,9 @@
 """Turn a recorded arm movement (local/recordings/*.json) into a robot demonstration, via MoveIt IK.
 
 Uses the live mirror's retargeting (therapy/retarget.py) and MoveIt's /compute_ik, so move_group must be
-running, e.g. the simulated robot the web interface starts for coaching. Each pose is solved starting from the
-previous solution, so the arm moves continuously; joint limits (such as the one-way elbow) apply.
+running, e.g. the simulated robot the web interface starts for coaching. Each pose is solved from the previous
+solution and from a pose with the elbow fitted to its target; the one with the closer elbow and smaller jump
+is kept. Joint limits (such as the one-way elbow) apply.
 """
 
 import json
@@ -49,14 +50,15 @@ def _robot_description(node, timeout=10.0):
     return received[0]
 
 
-def _solve(node, client, retarget, positions, target):
+def _solve(node, client, retarget, seed, target):
+    """IK from `seed` (joint positions) to put the eef at `target`: a new dict of joint positions, or None."""
     request = GetPositionIK.Request()
     ik = request.ik_request
     ik.group_name = retarget.arm["group"]
     ik.ik_link_name = retarget.arm["eef"]
     ik.avoid_collisions = False
     ik.timeout = IK_TIMEOUT
-    ik.robot_state.joint_state = JointState(name=list(positions), position=[float(v) for v in positions.values()])
+    ik.robot_state.joint_state = JointState(name=list(seed), position=[float(v) for v in seed.values()])
     ik.pose_stamped.header.frame_id = BASE_FRAME
     ik.pose_stamped.pose.position = Point(x=float(target[0]), y=float(target[1]), z=float(target[2]))
     ik.pose_stamped.pose.orientation.w = 1.0
@@ -64,9 +66,11 @@ def _solve(node, client, retarget, positions, target):
     rclpy.spin_until_future_complete(node, future, timeout_sec=2.0)
     response = future.result()
     if response is None or response.error_code.val != MoveItErrorCodes.SUCCESS:
-        return False
-    positions.update(zip(response.solution.joint_state.name, response.solution.joint_state.position))
-    return True
+        return None
+    solution = dict(seed)
+    names = response.solution.joint_state.name
+    solution.update((n, p) for n, p in zip(names, response.solution.joint_state.position) if n in solution)
+    return solution
 
 
 def recording_to_demo(path, node, smoothing=0.5, on_progress=None):
@@ -90,12 +94,20 @@ def recording_to_demo(path, node, smoothing=0.5, on_progress=None):
                 keep.append(i)
                 last = ti
 
-        rows, times, failed, target = [], [], 0, None
+        rows, times, failed, targets = [], [], 0, None
         for done, i in enumerate(keep, 1):
-            tip = retarget.targets(frames[i])[-1]
-            target = tip if target is None or smoothing <= 0 else smoothing * target + (1 - smoothing) * tip
-            if not _solve(node, client, retarget, positions, target):
+            new = retarget.targets(frames[i])
+            targets = new if targets is None or smoothing <= 0 else \
+                [smoothing * old + (1 - smoothing) * n for old, n in zip(targets, new)]
+            # solve from the previous pose and from one with the elbow fitted to its target; keep the better
+            tip, elbow = retarget.ik_target(targets), targets[0]
+            candidates = [_solve(node, client, retarget, positions, tip),
+                          _solve(node, client, retarget, retarget.elbow_seed(positions, elbow), tip)]
+            chosen = retarget.pick(candidates, positions, elbow)
+            if chosen is None:
                 failed += 1
+            else:
+                positions = chosen
             rows.append([positions[j] for j in retarget.joints])
             times.append(t[i])
             if on_progress:

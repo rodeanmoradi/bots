@@ -65,8 +65,6 @@
 <body>
 <header>
   <h1>BracketBot Arm Coach</h1>
-  <input id="camera" placeholder="camera: 0, /dev/video0, or http://phone-ip:4747/video">
-  <button id="camera-apply">Use camera</button>
   <span id="cam-state" class="pill">camera</span>
   <span id="track-state" class="pill">arm</span>
   <span id="ros-state" class="pill">ROS</span>
@@ -195,7 +193,6 @@ const BANNERS = {
   your_turn: ["YOUR TURN", "var(--good)", true],
   calibrating: ["HOLD STILL", "var(--warn)", false],
 };
-let cameraTouched = false;
 let demoTouched = false;      // until the user picks a demo, the newest entry stays selected
 let lastDemos = "";
 let bannerTiming = null;
@@ -225,8 +222,6 @@ document.querySelectorAll(".tabs button").forEach((button) => {
   });
 });
 
-$("camera").addEventListener("input", () => { cameraTouched = true; });
-$("camera-apply").onclick = async () => { await post("/api/camera", { spec: $("camera").value }); cameraTouched = false; };
 $("coach-robot").onchange = () => { $("coach-address").hidden = $("coach-robot").value !== "address"; };
 $("coach-demo").onchange = () => { demoTouched = true; };
 
@@ -313,14 +308,12 @@ function render(s) {
   $("status").style.borderLeftColor = PHASE_COLOURS[s.phase] || "var(--muted)";
   renderBanner(s);
 
-  if (!cameraTouched && document.activeElement !== $("camera")) $("camera").value = s.camera.spec;
   setPill($("cam-state"), s.camera.error ? "camera: no frames" : `camera: ${s.camera.spec}`, !s.camera.error);
   setPill($("track-state"), s.tracked ? "arm tracked" : "arm not visible", s.tracked);
   const ROBOT_PILLS = { off: "robot: off", starting: "robot: starting RViz...", ready: "robot: ready in RViz", error: "robot: failed to start" };
   setPill($("ros-state"), s.ros ? ROBOT_PILLS[s.robot] || `robot: ${s.robot}` : "ROS not sourced", s.ros && s.robot === "ready");
 
   const idle = s.mode === "idle";
-  $("camera-apply").disabled = !idle;
   $("rec-start").disabled = !idle;
   $("rec-stop").disabled = s.mode !== "record";
   $("coach-start").disabled = !idle || !s.demos.length;

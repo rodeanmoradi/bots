@@ -626,11 +626,6 @@ class App:
             self.detail = ("Camera ready. Choose Record, Coach or Mirror." if self.tracked or self.camera.fake
                            else "Camera ready. Stand so your hips, shoulders and arm are in view.")
 
-    def set_camera(self, spec):
-        self._require_idle()
-        self.camera.switch(spec.strip())
-        self.set_status("waiting", f"Switching camera to {spec.strip()}...")
-
     def _start_live_ik(self, side, plane, mirrored):
         """Start the live IK node, which drives the arm through its trajectory controller; the preview loop
         then publishes the landmarks to it. The robot is started too if it isn't up (without waiting)."""
@@ -734,7 +729,9 @@ class App:
             return Demo.load_csv(str(path)).clean()
 
         cache = DEMO_CACHE / f"{path.stem}.csv"
-        if cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime:
+        # stale when the recording or the conversion code (retargeting, IK seeding) changed since it was made
+        sources = (path, Path(__file__).with_name("recording_demo.py"), REPO_ROOT / "therapy" / "retarget.py")
+        if cache.exists() and cache.stat().st_mtime >= max(p.stat().st_mtime for p in sources):
             self.set_status("preparing", f"Using the robot demo already made from {path.name}.")
             return Demo.load_csv(str(cache)).clean()
 
@@ -903,7 +900,6 @@ def make_handler(app):
 
         def do_POST(self):
             routes = {
-                "/api/camera": app.set_camera,
                 "/api/record/start": app.record_start, "/api/record/stop": app.record_stop,
                 "/api/coach/start": app.coach_start, "/api/coach/stop": app.coach_stop,
                 "/api/mirror/start": app.mirror_start, "/api/mirror/stop": app.mirror_stop,

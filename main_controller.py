@@ -8,7 +8,9 @@ Landmarks (shoulder, elbow, wrist, hand in arm_xy.py plane coordinates; older
 recordings have no wrist) arrive on /mediapipe/arm_landmarks, from
 RecordingPlayer here or MediaPipe/arm_xy_node.py. ArmController retargets them
 onto the robot's arm (therapy/retarget.py), asks move_group's /compute_ik for
-joint angles and publishes /joint_states.
+joint angles and publishes /joint_states. Each target is solved twice, seeded
+from the previous pose and from a pose with the elbow fitted to its target;
+the solution with the closer elbow (and smaller jump) wins.
 
 With output:=controller it sends the joint angles to the arm's
 joint_trajectory_controller instead, for when ros2_control owns /joint_states
@@ -69,6 +71,7 @@ class ArmController(Node):
         self._target = None
         self._queued = None
         self._ik_pending = False
+        self._ik_batch = None
         self._ik_ok = True
         self._stats = [0, 0]
         self.set_arm(self.get_parameter("side").value, self.get_parameter("plane").value)
@@ -104,8 +107,8 @@ class ArmController(Node):
         self._retarget = Retargeter(self._model, self._side, self._plane, self.get_parameter("mirrored").value)
         r = self._retarget
         self.get_logger().info(
-            f"{self._arm['group']}: shoulder {np.round(r.shoulder, 3)} in {BASE_FRAME}, "
-            f"upper arm {r.upper_len:.3f} m, forearm {r.forearm_len:.3f} m, wrist to gripper tip {r.hand_len:.3f} m")
+            f"{self._arm['group']}: shoulder {np.round(r.shoulder, 3)} in {BASE_FRAME}, reach {r.reach:.3f} m: "
+            f"upper arm {r.upper_len:.3f} m, forearm {r.forearm_len:.3f} m, wrist to fingertips {r.hand_len:.3f} m")
 
     def _on_landmarks(self, msg):
         if self._model is None or len(msg.poses) not in (3, 4):
@@ -115,50 +118,74 @@ class ArmController(Node):
         if self._target is not None and len(self._target) == len(targets) and alpha > 0.0:
             targets = [alpha * old + (1.0 - alpha) * new for old, new in zip(self._target, targets)]
         self._target = targets
-        self._queued = targets[-1]
+        self._queued = targets
         self._send_ik()
         self._publish_markers()
 
     def _send_ik(self):
-        # One request in flight at a time; frames arriving meanwhile collapse to the newest.
+        # One target in flight at a time; frames arriving meanwhile collapse to the newest.
         if self._ik_pending or self._queued is None or not self._ik.service_is_ready():
             return
+        targets, self._queued = self._queued, None
+        previous = dict(self._positions)
+        elbow = targets[0]
+        tip = self._retarget.ik_target(targets)
+        seeds = (previous, self._retarget.elbow_seed(previous, elbow))
+        self._ik_pending = True
+        self._ik_batch = {"previous": previous, "elbow": elbow, "solutions": [None] * len(seeds),
+                          "remaining": len(seeds)}
+        for index, seed in enumerate(seeds):
+            future = self._ik.call_async(self._ik_request(seed, tip))
+            future.add_done_callback(lambda f, index=index: self._on_ik_result(index, f))
+
+    def _ik_request(self, seed, point):
         request = GetPositionIK.Request()
         ik = request.ik_request
         ik.group_name = self._arm["group"]
         ik.ik_link_name = self._arm["eef"]
         ik.avoid_collisions = False
         ik.timeout = IK_TIMEOUT
-        ik.robot_state.joint_state = self._joint_state_msg()
+        ik.robot_state.joint_state = self._joint_state(seed)
         ik.pose_stamped.header.frame_id = BASE_FRAME
-        x, y, z = (float(v) for v in self._queued)
+        x, y, z = (float(v) for v in point)
         ik.pose_stamped.pose.position = Point(x=x, y=y, z=z)
         ik.pose_stamped.pose.orientation.w = 1.0
-        self._queued = None
-        self._ik_pending = True
-        self._ik.call_async(request).add_done_callback(self._on_ik_result)
+        return request
 
-    def _on_ik_result(self, future):
-        self._ik_pending = False
+    def _on_ik_result(self, index, future):
+        batch = self._ik_batch
         response = future.result()
-        self._ik_ok = response is not None and response.error_code.val == MoveItErrorCodes.SUCCESS
-        if self._ik_ok:
-            solution = response.solution.joint_state
-            self._positions.update(zip(solution.name, solution.position))
+        if response is not None and response.error_code.val == MoveItErrorCodes.SUCCESS:
+            solution = dict(batch["previous"])
+            names = response.solution.joint_state.name
+            solution.update((n, p) for n, p in zip(names, response.solution.joint_state.position) if n in solution)
+            batch["solutions"][index] = solution
+        batch["remaining"] -= 1
+        if batch["remaining"]:
+            return
+        self._ik_pending = False
+        chosen = self._retarget.pick(batch["solutions"], batch["previous"], batch["elbow"])
+        self._ik_ok = chosen is not None
+        if chosen is not None:
+            self._positions.update(chosen)
             self._solved = True
             if self._output == "controller":
                 self._send_command()
         self._stats[0 if self._ik_ok else 1] += 1
         self._send_ik()
 
-    def _joint_state_msg(self):
+    def _joint_state(self, positions):
+        positions = dict(positions)
         for follower, (leader, multiplier, offset) in self._model.mimic.items():
-            self._positions[follower] = multiplier * self._positions[leader] + offset
+            positions[follower] = multiplier * positions[leader] + offset
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.name = list(self._positions)
-        msg.position = [float(v) for v in self._positions.values()]
+        msg.name = list(positions)
+        msg.position = [float(v) for v in positions.values()]
         return msg
+
+    def _joint_state_msg(self):
+        return self._joint_state(self._positions)
 
     def _publish_joint_states(self):
         if self._model is not None:

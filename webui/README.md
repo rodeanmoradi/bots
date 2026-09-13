@@ -53,4 +53,4 @@ are out of reach. Recordings need *simulated robot*.
 
 - `GET /api/state`: everything the page shows
 - `GET /stream.mjpg`: video
-- `POST /api/camera`, `/api/record/start|stop`, `/api/coach/start|stop`, `/api/mirror/start|stop` (JSON body)
+- `POST /api/record/start|stop`, `/api/coach/start|stop`, `/api/mirror/start|stop` (JSON body)

@@ -28,70 +28,59 @@ Run webpage:
 ## How it works
 
 ```mermaid
-flowchart LR
-    subgraph vision["Vision, no ROS"]
-        cam["Camera<br/>OpenCV"] --> mp["MediaPipe Pose<br/>arm_xy.py"]
+flowchart TB
+    subgraph perception["1. Perception"]
+        cam["Camera<br/>OpenCV"] --> mp["MediaPipe Pose<br/>arm_xy.py"] --> web["webui/server.py"]
     end
 
-    web["webui node<br/>webui/server.py"]
-    mc["arm_controller<br/>main_controller.py<br/>retarget + IK"]
-    mg["move_group<br/>MoveIt"]
-    rsp["robot_state_publisher"]
-    subgraph r2c["ros2_control_node, mock hardware"]
-        jtc["right/left_arm_controller"]
+    subgraph ik["2. Retarget + IK"]
+        mc["main_controller.py"]
+        mg["move_group<br/>MoveIt"]
+    end
+
+    subgraph robot["3. Robot: ros2_control"]
+        jtc["arm controller"]
         jsb["joint_state_broadcaster"]
     end
-    coach["Coach<br/>therapy/coach.py"]
-    pd["play_demo<br/>play_demo.py"]
-    rviz["RViz"]
 
-    T_lm(["/mediapipe/arm_landmarks<br/>PoseArray"])
-    T_tgt(["/mediapipe/arm_targets<br/>MarkerArray"])
-    T_traj(["/right_arm_controller/joint_trajectory<br/>JointTrajectory"])
-    T_js(["/joint_states<br/>JointState"])
-    T_desc(["/robot_description<br/>String, latched"])
-    T_tf(["/tf"])
-    T_ps(["/monitored_planning_scene"])
-    S_ik{{"/compute_ik<br/>GetPositionIK service"}}
-    A_fjt[["/right_arm_controller/follow_joint_trajectory<br/>action"]]
+    subgraph viz["4. Visualization"]
+        rsp["robot_state_publisher"]
+        rviz["RViz"]
+    end
 
-    mp -->|"landmarks"| web
-    web --> T_lm --> mc
-    mc -.->|"request"| S_ik
-    web -.->|"recording → demo"| S_ik
-    S_ik -.->|"served by"| mg
-    mc --> T_traj
-    web -->|"send arm home"| T_traj
-    T_traj --> jtc
-    mc --> T_tgt --> rviz
-    coach -->|"demo over TCP"| pd
-    pd --> A_fjt --> jtc
-    jtc -->|"joint positions"| jsb
-    jsb --> T_js
-    T_js --> rsp
-    T_js --> mg
-    T_js --> mc
-    rsp --> T_desc
-    T_desc --> mc
-    T_desc --> r2c
-    T_desc --> rviz
-    rsp --> T_tf --> rviz
-    mg --> T_ps --> rviz
+    subgraph coaching["Coaching"]
+        coach["therapy/coach.py"] -->|"TCP"| pd["play_demo.py"]
+    end
+
+    web -->|"/mediapipe/arm_landmarks"| mc
+    mc -.->|"/compute_ik"| mg
+    mc -->|"/right_arm_controller/joint_trajectory"| jtc
+    pd ==>|"follow_joint_trajectory"| jtc
+    jtc --> jsb
+    jsb -->|"/joint_states"| rsp
+    rsp -->|"/tf"| rviz
+    mc -->|"/mediapipe/arm_targets"| rviz
 ```
 
-Rectangles: nodes. Rounded: topics (publisher → topic → subscriber). Hexagon:
-service. Double box: action. The left arm uses `left_arm_controller`.
+Solid arrow: topic, from publisher to subscriber. Dotted: service call. Thick:
+action. The left arm uses `left_arm_controller`.
 
-1. **Camera**: OpenCV reads a webcam or phone stream.
-2. **Landmarks**: MediaPipe finds shoulder, elbow, wrist and hand in one body
-   plane (side, front or top). Published on `/mediapipe/arm_landmarks`.
-3. **Retarget**: the person's bone directions, scaled to the robot's bone
-   lengths and anchored at its shoulder (`therapy/retarget.py`).
-4. **IK**: `/compute_ik` returns joint angles within the joint limits.
-5. **Motion**: the angles go to the arm controller; RViz shows the result.
+1. **Perception**: OpenCV reads the camera; MediaPipe finds shoulder, elbow,
+   wrist and hand. The server publishes them on `/mediapipe/arm_landmarks`.
+2. **Retarget + IK**: `main_controller.py` maps the landmarks onto the robot's
+   arm (`therapy/retarget.py`) and asks MoveIt's `/compute_ik` for joint angles.
+3. **Robot**: the angles go to the arm controller, which publishes the arm's
+   position on `/joint_states`.
+4. **Visualization**: `robot_state_publisher` turns joint states into `/tf`
+   frames; RViz draws the robot and the retarget markers.
 
-**Coaching** converts a recording with `/compute_ik` beforehand, then
-`play_demo.py` plays it through the `follow_joint_trajectory` action.
+**Coaching** skips perception and IK at play time: the recording is converted
+with `/compute_ik` beforehand, and `play_demo.py` sends the whole demo as an
+action.
+
+Not shown: `/robot_description`, the robot's URDF published once as text by
+`robot_state_publisher`, so every node loads the same model. It's "latched":
+nodes that start later still receive it.
 
 ## Adaptive coaching
 
