@@ -12,6 +12,7 @@ install(
   PROGRAMS
     scripts/record_demo.sh
     scripts/bag_to_csv.py
+    scripts/play_demo.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

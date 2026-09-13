@@ -1,0 +1,5 @@
+# python -m venv .venv-therapy && .venv-therapy/bin/pip install -r therapy/requirements.txt
+# mediapipe 1.x crashes on macOS ("Service is unavailable" in the Metal helper); 0.10.21 works.
+mediapipe==0.10.21
+numpy<2
+opencv-python>=4.8,<5
