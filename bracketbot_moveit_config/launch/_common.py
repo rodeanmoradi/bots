@@ -8,6 +8,7 @@ from launch_ros.actions import Node
 from moveit_configs_utils import MoveItConfigsBuilder
 
 PACKAGE = "bracketbot_moveit_config"
+RVIZ_RESPAWNS = 10
 
 
 def build_moveit_config(controllers_file, publish_robot_description):
@@ -59,7 +60,8 @@ def move_group_node(moveit_config, use_sim_time=False):
 
 
 def rviz_node(moveit_config, use_sim_time=False, config="config/moveit.rviz", condition=None, respawn=False):
-    """respawn: reopen RViz when its window is closed (a bool or a launch substitution)."""
+    """respawn: reopen RViz when its window is closed (a bool or a launch substitution), up to
+    RVIZ_RESPAWNS times, so an RViz that can't start (no display) doesn't restart forever."""
     return Node(
         package="rviz2",
         executable="rviz2",
@@ -67,6 +69,7 @@ def rviz_node(moveit_config, use_sim_time=False, config="config/moveit.rviz", co
         condition=condition,
         respawn=respawn,
         respawn_delay=2.0,
+        respawn_max_retries=RVIZ_RESPAWNS,
         # a launch substitution (e.g. from a launch argument) is passed through as-is
         arguments=["-d", str(moveit_config.package_path / config) if isinstance(config, str) else config],
         parameters=[

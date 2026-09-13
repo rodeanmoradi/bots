@@ -148,9 +148,11 @@ def main():
         ap.error("give a CSV to play, or --serve PORT")
 
     # rclpy's own SIGINT/SIGTERM handlers only shut its context down, which serve_forever() never notices,
-    # so the server outlived every stop. Let both signals end the program instead.
+    # so the server outlived every stop. Let both signals end the program instead (SIGINT explicitly too:
+    # a process started in the background inherits it ignored).
     rclpy.init(args=ros_args, signal_handler_options=SignalHandlerOptions.NO)
-    signal.signal(signal.SIGTERM, signal.default_int_handler)
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        signal.signal(sig, signal.default_int_handler)
     player = DemoPlayer(args.approach, args.return_time)
     try:
         if args.serve is not None:

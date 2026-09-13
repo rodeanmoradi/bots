@@ -12,7 +12,7 @@ __pycache__/
 *.pyc
 .vscode/
 
-# data written on this machine: recorded motions (local/recordings/), coaching logs (local/sessions/)
+# data written on this machined
 local/
 
 # therapy venv (see therapy/requirements.txt)

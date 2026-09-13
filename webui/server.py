@@ -430,8 +430,9 @@ class App:
         self._closing = threading.Event()
         left = self.procs.reap_orphans()
         if left:
-            self.log.append(f"{time.strftime('%H:%M:%S')}  Stopped ROS processes a previous server left running: "
-                            f"{', '.join(left)}")
+            message = f"Stopped ROS processes a previous server left running: {', '.join(left)}"
+            self.log.append(f"{time.strftime('%H:%M:%S')}  {message}")
+            print(message, flush=True)
         threading.Thread(target=self._preview_loop, daemon=True).start()
         if start_robot and shutil.which("ros2") is not None:
             self._start_robot_background()
