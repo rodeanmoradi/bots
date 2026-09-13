@@ -38,6 +38,8 @@ sudo apt install -y \
   ros-jazzy-ros2-control \
   ros-jazzy-ros2-controllers \
   ros-jazzy-gz-ros2-control \
+  ros-jazzy-moveit \
+  ros-jazzy-moveit-setup-assistant \
   python3-colcon-common-extensions \
   python3-rosdep
 

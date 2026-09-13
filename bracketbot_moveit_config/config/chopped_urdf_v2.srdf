@@ -21,6 +21,13 @@
     <group name="left_arm">
         <chain base_link="arm_base" tip_link="left_eef" />
     </group>
+    <!-- Six revolute joints only: the mast lift stays where it is. -->
+    <group name="right_arm_no_mast">
+        <chain base_link="shoulder__shoulder" tip_link="right_eef" />
+    </group>
+    <group name="left_arm_no_mast">
+        <chain base_link="l_shoulder__shoulder" tip_link="left_eef" />
+    </group>
     <group name="both_arms">
         <group name="right_arm" />
         <group name="left_arm" />

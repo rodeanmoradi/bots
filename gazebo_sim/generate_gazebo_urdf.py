@@ -153,6 +153,9 @@ def write_controllers_yaml() -> None:
             f"    state_interfaces:\n"
             f"      - position\n"
             f"      - velocity\n"
+            f"    # MoveIt plans per group (arm vs. gripper) but this controller owns both;\n"
+            f"    # accept goals that name only a subset of the joints.\n"
+            f"    allow_partial_joints_goal: true\n"
         )
 
     content = (

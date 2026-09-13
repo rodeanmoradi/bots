@@ -40,6 +40,16 @@ def build_moveit_config(controllers_file, publish_robot_description):
     )
 
 
+def enable_position_only_ik(moveit_config):
+    """For the MediaPipe launches: solvers for the *_arm_no_mast groups, and position-only
+    solves everywhere since MediaPipe gives no usable hand orientation."""
+    kinematics = moveit_config.robot_description_kinematics["robot_description_kinematics"]
+    for side in ("right", "left"):
+        kinematics[f"{side}_arm_no_mast"] = dict(kinematics[f"{side}_arm"])
+    for group in kinematics.values():
+        group["position_only_ik"] = True
+
+
 def move_group_node(moveit_config, use_sim_time=False):
     return Node(
         package="moveit_ros_move_group",
@@ -49,12 +59,13 @@ def move_group_node(moveit_config, use_sim_time=False):
     )
 
 
-def rviz_node(moveit_config, use_sim_time=False):
+def rviz_node(moveit_config, use_sim_time=False, config="config/moveit.rviz", condition=None):
     return Node(
         package="rviz2",
         executable="rviz2",
         output="log",
-        arguments=["-d", str(moveit_config.package_path / "config/moveit.rviz")],
+        condition=condition,
+        arguments=["-d", str(moveit_config.package_path / config)],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
