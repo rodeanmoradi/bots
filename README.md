@@ -72,5 +72,7 @@ warning. For IK the arm base link is `arm_base` and the end effectors are
 | `chopped_urdf_v2_gazebo/`, `gazebo_sim/` | Gazebo Sim physics setup |
 | `bracketbot_moveit_config/` | MoveIt 2: RViz interactive-marker teleop + demo recording (see its README) |
 | `therapy/` | the AOT loop: sim robot demonstrates → webcam pose estimation scores the child → demo adapts (no ROS; see its README) |
+| `webui/` | browser interface: camera + landmarks, record motions, coach, live mirror (`webui/run.sh [--camera URL]`, then http://localhost:8765) |
+| `local/` | git-ignored data written on this machine: `recordings/` (recorded motions), `demos/` (robot demos made from recordings with IK), `sessions/` (coaching logs) |
 | `ros2_ws/` | colcon workspace (symlinks to the packages above) |
 | `docker/` | ROS 2 + MoveIt + Gazebo container for machines without ROS (`./docker/run.sh`) |

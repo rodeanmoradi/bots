@@ -41,13 +41,12 @@ def build_moveit_config(controllers_file, publish_robot_description):
 
 
 def enable_position_only_ik(moveit_config):
-    """For the MediaPipe launches: solvers for the *_arm_no_mast groups, and position-only
-    solves everywhere since MediaPipe gives no usable hand orientation."""
+    """IK solvers for the *_arm_no_mast groups the MediaPipe pipelines use, solving for the gripper
+    position only (MediaPipe gives no usable hand orientation). The other groups, used by RViz teleop,
+    keep their full-pose solvers."""
     kinematics = moveit_config.robot_description_kinematics["robot_description_kinematics"]
     for side in ("right", "left"):
-        kinematics[f"{side}_arm_no_mast"] = dict(kinematics[f"{side}_arm"])
-    for group in kinematics.values():
-        group["position_only_ik"] = True
+        kinematics[f"{side}_arm_no_mast"] = {**kinematics[f"{side}_arm"], "position_only_ik": True}
 
 
 def move_group_node(moveit_config, use_sim_time=False):
@@ -59,13 +58,17 @@ def move_group_node(moveit_config, use_sim_time=False):
     )
 
 
-def rviz_node(moveit_config, use_sim_time=False, config="config/moveit.rviz", condition=None):
+def rviz_node(moveit_config, use_sim_time=False, config="config/moveit.rviz", condition=None, respawn=False):
+    """respawn: reopen RViz when its window is closed (a bool or a launch substitution)."""
     return Node(
         package="rviz2",
         executable="rviz2",
         output="log",
         condition=condition,
-        arguments=["-d", str(moveit_config.package_path / config)],
+        respawn=respawn,
+        respawn_delay=2.0,
+        # a launch substitution (e.g. from a launch argument) is passed through as-is
+        arguments=["-d", str(moveit_config.package_path / config) if isinstance(config, str) else config],
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,

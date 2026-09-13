@@ -105,22 +105,30 @@ def draw_panel(frame, lines, colour, width=560):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, colour, 2, cv2.LINE_AA)
 
 
-def save_trajectory(traj, args, out_dir=Path("trajectories")):
-    """Write the collected frames as .npy plus a readable .json."""
-    out_dir.mkdir(exist_ok=True)
+def save_trajectory(traj, args, out_dir=Path(__file__).resolve().parents[1] / "local" / "recordings", t=None):
+    """Write the collected frames as .npy plus a readable .json (default: the git-ignored local/recordings/).
+
+    t: capture time of each frame (seconds, any origin), saved relative to the first frame.
+    args: needs side and plane; mirrored (the robot view's Flip setting) is saved if present.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     arr = np.stack(traj)                       # (n_frames, 4, 2)
     npy = out_dir / f"{args.side}_{args.plane}_{stamp}.npy"
     js = npy.with_suffix(".json")
     np.save(npy, arr)
-    js.write_text(json.dumps({
+    record = {
         "side": args.side,
         "plane": args.plane,
+        "mirrored": bool(getattr(args, "mirrored", False)),
         "shape": list(arr.shape),
         "order": list(LABELS),
         "units": "raw, roughly metres, origin at hip centre, unscaled",
-        "frames": arr.round(5).tolist(),
-    }, indent=2))
+    }
+    if t is not None:
+        record["t"] = np.round(np.asarray(t, dtype=float) - t[0], 4).tolist()
+    record["frames"] = arr.round(5).tolist()
+    js.write_text(json.dumps(record, indent=2))
     return npy, js, arr.shape
 
 
@@ -158,7 +166,7 @@ def main():
     print(f"side={args.side}  plane={args.plane}  claw={args.claw}")
     print("SPACE collect   S save   C clear   Esc quit")
 
-    traj, collecting = [], False
+    traj, traj_t, collecting = [], [], False
     trail = []                      # recent hand positions, for the mini plot
     msg = ""
     fps_t, fps_n, fps = time.time(), 0, 0.0
@@ -189,6 +197,7 @@ def main():
                 trail = trail[-120:]
                 if collecting:
                     traj.append(pts)
+                    traj_t.append(last_frame_t)
 
             draw_skeleton(frame)
             draw_points_plot(frame, pts, trail)
@@ -230,14 +239,14 @@ def main():
                 msg = "collecting..." if collecting else f"stopped at {len(traj)} frames"
             elif k in (ord("s"), ord("S")):
                 if traj:
-                    npy, js, shape = save_trajectory(traj, args)
+                    npy, js, shape = save_trajectory(traj, args, t=traj_t)
                     msg = f"saved {npy.name}  {shape}"
                     print(f"saved {npy}  shape={shape}")
                     print(f"      {js}")
                 else:
                     msg = "nothing collected yet"
             elif k in (ord("c"), ord("C")):
-                traj, msg = [], "cleared"
+                traj, traj_t, msg = [], [], "cleared"
     finally:
         cap.release()
         cv2.destroyAllWindows()

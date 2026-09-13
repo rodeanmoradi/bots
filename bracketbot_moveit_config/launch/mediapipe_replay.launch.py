@@ -39,7 +39,7 @@ def generate_launch_description():
 
     arguments = [
         DeclareLaunchArgument("recording", default_value="latest",
-                              description="trajectories/*.json file, or 'latest'"),
+                              description="a recording .json (local/recordings/ or trajectories/), or 'latest'"),
         DeclareLaunchArgument("rate_hz", default_value="20.0", description="playback rate"),
         DeclareLaunchArgument("loop", default_value="true"),
         DeclareLaunchArgument("smoothing", default_value="0.5",

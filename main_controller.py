@@ -7,13 +7,16 @@
 Landmarks (shoulder, elbow, wrist, hand in arm_xy.py plane coordinates; older
 recordings have no wrist) arrive on /mediapipe/arm_landmarks, from
 RecordingPlayer here or MediaPipe/arm_xy_node.py. ArmController retargets them
-onto the robot's arm, asks move_group's /compute_ik for joint angles and
-publishes /joint_states.
+onto the robot's arm (therapy/retarget.py), asks move_group's /compute_ik for
+joint angles and publishes /joint_states.
+
+With output:=controller it sends the joint angles to the arm's
+joint_trajectory_controller instead, for when ros2_control owns /joint_states
+(demo.launch.py, as the web interface runs it).
 """
 
 import json
 import sys
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import numpy as np
@@ -28,80 +31,19 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
 from sensor_msgs.msg import JointState
 from std_msgs.msg import ColorRGBA, String
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from visualization_msgs.msg import Marker, MarkerArray
+
+from therapy.retarget import ARMS, BASE_FRAME, Retargeter, RobotModel
 
 REPO_ROOT = Path(__file__).resolve().parent
 LANDMARKS_TOPIC = "/mediapipe/arm_landmarks"
 TARGETS_TOPIC = "/mediapipe/arm_targets"
-BASE_FRAME = "arm_base"
 IK_TIMEOUT = Duration(sec=0, nanosec=50_000_000)
 LANDMARK_ORDERS = (["shoulder", "elbow", "wrist", "hand"], ["shoulder", "elbow", "hand"])
 
-ARMS = {
-    # *_no_mast groups leave rj0/lj0 out of IK, so the j1 anchor never moves.
-    "right": {"group": "right_arm_no_mast", "eef": "right_eef", "prefix": "rj"},
-    "left": {"group": "left_arm_no_mast", "eef": "left_eef", "prefix": "lj"},
-}
-
-# arm_xy.py plane axes (x, y) as directions in arm_base (x forward, y left, z up).
-PLANE_AXES = {
-    "side": (np.array([1.0, 0, 0.0]), np.array([0.0, 0.0, 1.0])),
-    "front": (np.array([0.0, 1.0, 0.0]), np.array([0.0, 0.0, 1.0])),
-    "top": (np.array([0.0, 1.0, 0.0]), np.array([1.0, 0.0, 0.0])),
-}
-
 # Launch arguments arrive as "15" or "15.0"; accept either.
 DYNAMIC = ParameterDescriptor(dynamic_typing=True)
-
-
-def _unit(v):
-    n = np.linalg.norm(v)
-    return v / n if n > 1e-9 else v
-
-
-def _origin_transform(origin):
-    T = np.eye(4)
-    if origin is None:
-        return T
-    r, p, y = (float(v) for v in origin.get("rpy", "0 0 0").split())
-    cr, sr, cp, sp, cy, sy = np.cos(r), np.sin(r), np.cos(p), np.sin(p), np.cos(y), np.sin(y)
-    T[:3, :3] = [[cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr],
-                 [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr],
-                 [-sp, cp * sr, cp * cr]]
-    T[:3, 3] = [float(v) for v in origin.get("xyz", "0 0 0").split()]
-    return T
-
-
-class RobotModel:
-    """Joint names, mimic rules and zero-pose link positions from the URDF."""
-
-    def __init__(self, urdf_xml):
-        root = ET.fromstring(urdf_xml)
-        self.parent = {}
-        self.joint_child = {}
-        self.movable = []
-        self.mimic = {}
-        for joint in root.findall("joint"):
-            name = joint.get("name")
-            child = joint.find("child").get("link")
-            self.parent[child] = (joint.find("parent").get("link"),
-                                  _origin_transform(joint.find("origin")))
-            self.joint_child[name] = child
-            if joint.get("type") != "fixed":
-                self.movable.append(name)
-                mimic = joint.find("mimic")
-                if mimic is not None:
-                    self.mimic[name] = (mimic.get("joint"),
-                                        float(mimic.get("multiplier", 1.0)),
-                                        float(mimic.get("offset", 0.0)))
-
-    def position(self, link, ref=BASE_FRAME):
-        T = np.eye(4)
-        while link != ref:
-            parent, T_joint = self.parent[link]
-            T = T_joint @ T
-            link = parent
-        return T[:3, 3]
 
 
 class ArmController(Node):
@@ -115,7 +57,14 @@ class ArmController(Node):
         self.declare_parameter("smoothing", 0.5, DYNAMIC)
         self.declare_parameter("publish_rate_hz", 30.0, DYNAMIC)
         self.declare_parameter("mirrored", True)
+        self.declare_parameter("output", "joint_states")        # joint_states | controller
+        self.declare_parameter("command_time", 0.1, DYNAMIC)   # output:=controller: seconds to reach each solution
+        self._output = self.get_parameter("output").value
+        if self._output not in ("joint_states", "controller"):
+            raise ValueError(f"output must be 'joint_states' or 'controller', got {self._output!r}")
+        self._solved = False
         self._model = None
+        self._retarget = None
         self._positions = {}
         self._target = None
         self._queued = None
@@ -127,20 +76,22 @@ class ArmController(Node):
         latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(String, "/robot_description", self._on_robot_description, latched)
         self.create_subscription(PoseArray, LANDMARKS_TOPIC, self._on_landmarks, 10)
-        self._joint_pub = self.create_publisher(JointState, "/joint_states", 10)
         self._marker_pub = self.create_publisher(MarkerArray, TARGETS_TOPIC, 10)
         self._ik = self.create_client(GetPositionIK, "/compute_ik")
-        rate = float(self.get_parameter("publish_rate_hz").value)
-        self.create_timer(1.0 / rate, self._publish_joint_states)
+        if self._output == "controller":
+            self._command_pub = self.create_publisher(
+                JointTrajectory, f"/{self._side}_arm_controller/joint_trajectory", 10)
+            self.create_subscription(JointState, "/joint_states", self._on_joint_states, 10)
+        else:
+            self._joint_pub = self.create_publisher(JointState, "/joint_states", 10)
+            rate = float(self.get_parameter("publish_rate_hz").value)
+            self.create_timer(1.0 / rate, self._publish_joint_states)
         self.create_timer(2.0, self._log_stats)
 
     def set_arm(self, side, plane):
         """Pick the robot arm and landmark plane. Call before spinning."""
+        self._side, self._plane = side, plane
         self._arm = ARMS[side]
-        self._axes = PLANE_AXES[plane]
-        if self.get_parameter("mirrored").value:
-            # A mirrored camera feed makes arm_xy's forward and sideways axes point backwards/right.
-            self._axes = tuple(axis * np.array([-1.0, -1.0, 1.0]) for axis in self._axes)
 
     def is_ready(self):
         return self._model is not None and self._ik.service_is_ready()
@@ -150,36 +101,16 @@ class ArmController(Node):
             return
         self._model = RobotModel(msg.data)
         self._positions = {name: 0.0 for name in self._model.movable}
-        prefix = self._arm["prefix"]
-        self._shoulder = self._model.position(self._model.joint_child[f"{prefix}1"])
-        elbow = self._model.position(self._model.joint_child[f"{prefix}3"])
-        wrist = self._model.position(self._model.joint_child[f"{prefix}5"])
-        eef = self._model.position(self._arm["eef"])
-        self._upper_len = float(np.linalg.norm(elbow - self._shoulder))
-        self._forearm_len = float(np.linalg.norm(wrist - elbow))
-        self._hand_len = float(np.linalg.norm(eef - wrist))
-        self._lower_len = float(np.linalg.norm(eef - elbow))
+        self._retarget = Retargeter(self._model, self._side, self._plane, self.get_parameter("mirrored").value)
+        r = self._retarget
         self.get_logger().info(
-            f"{self._arm['group']}: shoulder {np.round(self._shoulder, 3)} in {BASE_FRAME}, "
-            f"upper arm {self._upper_len:.3f} m, forearm {self._forearm_len:.3f} m, "
-            f"wrist to gripper tip {self._hand_len:.3f} m")
+            f"{self._arm['group']}: shoulder {np.round(r.shoulder, 3)} in {BASE_FRAME}, "
+            f"upper arm {r.upper_len:.3f} m, forearm {r.forearm_len:.3f} m, wrist to gripper tip {r.hand_len:.3f} m")
 
     def _on_landmarks(self, msg):
         if self._model is None or len(msg.poses) not in (3, 4):
             return
-        ax, ay = self._axes
-        human = [p.position.x * ax + p.position.y * ay for p in msg.poses]
-        if len(human) == 4:
-            lengths = (self._upper_len, self._forearm_len, self._hand_len)
-        else:
-            # Older recordings have no wrist point: one segment from elbow to gripper tip.
-            lengths = (self._upper_len, self._lower_len)
-        # Keep the human's bone directions, use the robot's bone lengths.
-        targets = []
-        joint = self._shoulder
-        for start, end, length in zip(human, human[1:], lengths):
-            joint = joint + _unit(end - start) * length
-            targets.append(joint)
+        targets = self._retarget.targets([(p.position.x, p.position.y) for p in msg.poses])
         alpha = float(self.get_parameter("smoothing").value)
         if self._target is not None and len(self._target) == len(targets) and alpha > 0.0:
             targets = [alpha * old + (1.0 - alpha) * new for old, new in zip(self._target, targets)]
@@ -214,6 +145,9 @@ class ArmController(Node):
         if self._ik_ok:
             solution = response.solution.joint_state
             self._positions.update(zip(solution.name, solution.position))
+            self._solved = True
+            if self._output == "controller":
+                self._send_command()
         self._stats[0 if self._ik_ok else 1] += 1
         self._send_ik()
 
@@ -230,9 +164,24 @@ class ArmController(Node):
         if self._model is not None:
             self._joint_pub.publish(self._joint_state_msg())
 
+    def _on_joint_states(self, msg):
+        # Seed IK from where the controller left the arm, until this node has solutions of its own.
+        if self._model is not None and not self._solved:
+            self._positions.update((n, p) for n, p in zip(msg.name, msg.position) if n in self._positions)
+
+    def _send_command(self):
+        """Send the arm joints of the latest solution to the trajectory controller, which replaces
+        whatever it was doing with a short glide there."""
+        prefix = self._arm["prefix"]
+        names = [n for n in self._positions if n.startswith(prefix)]
+        seconds = float(self.get_parameter("command_time").value)
+        point = JointTrajectoryPoint(positions=[float(self._positions[n]) for n in names])
+        point.time_from_start = Duration(sec=int(seconds), nanosec=int(seconds % 1 * 1e9))
+        self._command_pub.publish(JointTrajectory(joint_names=names, points=[point]))
+
     def _publish_markers(self):
         points = [Point(x=float(p[0]), y=float(p[1]), z=float(p[2]))
-                  for p in [self._shoulder, *self._target]]
+                  for p in [self._retarget.shoulder, *self._target]]
         bones = Marker(type=Marker.LINE_STRIP, ns="retarget", id=0, points=points)
         bones.scale.x = 0.01
         bones.color = ColorRGBA(r=1.0, g=0.6, b=0.0, a=1.0)
@@ -254,7 +203,7 @@ class ArmController(Node):
 
 
 class RecordingPlayer(Node):
-    """Replays a MediaPipe/run_arm_xy.py recording as landmark messages."""
+    """Replays a MediaPipe recording (web interface or run_arm_xy.py) as landmark messages."""
 
     def __init__(self):
         super().__init__("recording_player")
@@ -279,10 +228,12 @@ class RecordingPlayer(Node):
     @staticmethod
     def _resolve(spec):
         if spec == "latest":
-            recordings = sorted((REPO_ROOT / "trajectories").glob("*.json"),
+            # Newest take by the timestamp in its name, from this machine's recordings or the checked-in ones.
+            recordings = sorted([*(REPO_ROOT / "local" / "recordings").glob("*.json"),
+                                 *(REPO_ROOT / "trajectories").glob("*.json")],
                                 key=lambda p: p.stem.rsplit("_", 1)[-1])
             if not recordings:
-                raise FileNotFoundError(f"no recordings in {REPO_ROOT / 'trajectories'}")
+                raise FileNotFoundError("no recordings in local/recordings/ or trajectories/")
             return recordings[-1]
         path = Path(spec).expanduser()
         if not path.is_absolute() and not path.exists():

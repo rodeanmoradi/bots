@@ -59,7 +59,7 @@ A rule table over three knobs of the demonstration (`demo.py: Demo.adapt`):
 | 3 good reps in a row | speed and size step back up toward the taught motion |
 | 3 reps getting worse | short rest, restart smaller |
 
-Every rep is logged to `sessions/<time>/session.jsonl` with both hand paths.
+Every rep is logged to `local/sessions/<time>/session.jsonl` (git-ignored) with both hand paths.
 
 ## Run
 

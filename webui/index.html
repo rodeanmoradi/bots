@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BracketBot Arm Coach</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1c1f25; --line: #2c313a; --text: #e6e8eb; --muted: #9aa3ad;
+    --accent: #4fb3ff; --good: #3ecf8e; --warn: #f5a524; --bad: #f25f5c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+  header { padding: 12px 20px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  header h1 { font-size: 16px; margin: 0 12px 0 0; }
+  header input { width: min(360px, 60vw); }
+  main { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); gap: 16px; padding: 16px 20px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+  .video img { width: 100%; display: block; border-radius: 8px; background: #000; aspect-ratio: 4 / 3; object-fit: contain; }
+  .video .hint { color: var(--muted); margin-top: 8px; }
+
+  .banner { border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; border: 2px solid var(--banner, var(--accent));
+            background: color-mix(in srgb, var(--banner, var(--accent)) 14%, var(--panel)); }
+  .banner-top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .banner-label { font-size: 34px; font-weight: 800; letter-spacing: .04em; color: var(--banner, var(--accent)); }
+  .banner-rep { font-size: 22px; font-weight: 600; }
+  .banner-tag { font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--line); color: var(--text); }
+  .banner-tag.corrected { background: var(--warn); color: #1c1203; font-weight: 600; }
+  .banner-text { margin: 6px 0 10px; font-size: 16px; }
+  .progress { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .progress > div { height: 100%; width: 0; background: var(--banner, var(--accent)); transition: width .1s linear; }
+  .banner-time { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .banner.pulse .banner-label { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .55; } }
+
+  .status { border-left: 4px solid var(--muted); }
+  .status .title { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .status .live { color: var(--accent); font-size: 18px; margin-top: 6px; min-height: 1.4em; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: var(--line); color: var(--muted); margin-right: 6px; }
+  .pill.on { background: rgba(62, 207, 142, .15); color: var(--good); }
+  .pill.off { background: rgba(242, 95, 92, .15); color: var(--bad); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tabs button { flex: 1; }
+  .tabs button.active { background: var(--accent); color: #0b1620; border-color: var(--accent); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .row label { color: var(--muted); min-width: 70px; }
+  .row select#coach-demo { flex: 1; min-width: 0; }
+  .help { color: var(--muted); margin: 0 0 10px; }
+  input, select, button { font: inherit; color: var(--text); background: #252932; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+  button { cursor: pointer; }
+  button.primary { background: var(--good); color: #06150e; border-color: var(--good); font-weight: 600; }
+  button.danger { background: var(--bad); color: #1c0605; border-color: var(--bad); font-weight: 600; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; }
+  .score { font-weight: 600; }
+  pre.log { margin: 0; max-height: 220px; overflow: auto; white-space: pre-wrap; color: var(--muted); font-size: 12px; }
+  .error { background: rgba(242, 95, 92, .15); color: var(--bad); border: 1px solid var(--bad); border-radius: 8px; padding: 8px 12px; margin: 0 20px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>BracketBot Arm Coach</h1>
+  <input id="camera" placeholder="camera: 0, /dev/video0, or http://phone-ip:4747/video">
+  <button id="camera-apply">Use camera</button>
+  <span id="cam-state" class="pill">camera</span>
+  <span id="track-state" class="pill">arm</span>
+  <span id="ros-state" class="pill">ROS</span>
+</header>
+<div id="error" class="error" hidden></div>
+
+<main>
+  <section>
+    <div id="banner" class="banner" hidden>
+      <div class="banner-top">
+        <span class="banner-label" id="banner-label">START</span>
+        <span class="banner-rep" id="banner-rep"></span>
+        <span class="banner-tag" id="banner-tag"></span>
+      </div>
+      <div class="banner-text" id="banner-text"></div>
+      <div class="progress"><div id="banner-bar"></div></div>
+      <div class="banner-time" id="banner-time"></div>
+    </div>
+    <div class="card video">
+      <img src="/stream.mjpg" alt="camera with pose landmarks">
+      <div class="hint">Mirrored view. Keep your hips, both shoulders and the moving arm in frame.</div>
+    </div>
+    <div class="card">
+      <h2>Coaching reps</h2>
+      <table>
+        <thead><tr><th>Rep</th><th>Score</th><th>What the robot changed, and why</th></tr></thead>
+        <tbody id="reps"><tr><td colspan="3" class="help">No reps yet.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="card status" id="status">
+      <h2>Robot status</h2>
+      <div class="title" id="title">Waiting</div>
+      <div class="detail" id="detail">Connecting...</div>
+      <div class="live" id="live"></div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button data-tab="record" class="active">Record</button>
+        <button data-tab="coach">Coach</button>
+        <button data-tab="mirror">Mirror</button>
+      </div>
+
+      <div data-panel="record">
+        <p class="help">Record your arm movement while the robot mirrors you in RViz. Takes are saved to <code>local/recordings/</code> (not tracked by git), and the newest one is offered first in the Coach tab.</p>
+        <div class="row"><label>Arm</label>
+          <select id="rec-side"><option value="right">right</option><option value="left">left</option></select>
+          <label>View</label>
+          <select id="rec-plane"><option value="side">side</option><option value="front">front</option><option value="top">top</option></select>
+        </div>
+        <div class="row">
+          <label>Show robot</label><input id="rec-robot" type="checkbox" checked>
+          <label>Flip</label><input id="rec-mirrored" type="checkbox">
+          <span class="help" style="margin:0">tick if the robot moves backwards</span>
+        </div>
+        <div class="row">
+          <button class="primary" id="rec-start">Start recording</button>
+          <button class="danger" id="rec-stop">Stop &amp; save</button>
+        </div>
+        <p class="help" id="rec-list"></p>
+      </div>
+
+      <div data-panel="coach" hidden>
+        <p class="help">The robot shows a movement, watches you copy it, scores the attempt, and adjusts the next demonstration. A recording is first turned into a robot demo with the simulated robot's IK.</p>
+        <div class="row"><label>Demo</label><select id="coach-demo"></select></div>
+        <div class="row"><label>Robot</label>
+          <select id="coach-robot">
+            <option value="sim">simulated robot (in RViz)</option>
+            <option value="stub">no robot (preview only)</option>
+            <option value="address">robot at address...</option>
+          </select>
+          <input id="coach-address" placeholder="host:port" value="127.0.0.1:5555" hidden>
+        </div>
+        <div class="row"><label>Reps</label><input id="coach-reps" type="number" min="1" max="30" value="8" style="width:80px">
+          <label>Your arm</label>
+          <select id="coach-arm"><option value="">opposite of robot</option><option value="left">left</option><option value="right">right</option></select>
+        </div>
+        <div class="row"><label>Speech</label><input id="coach-speak" type="checkbox" checked></div>
+        <div class="row">
+          <button class="primary" id="coach-start">Start coaching</button>
+          <button class="danger" id="coach-stop">Stop</button>
+        </div>
+      </div>
+
+      <div data-panel="mirror" hidden>
+        <p class="help">The robot copies your arm live in RViz, through MoveIt IK.</p>
+        <div class="row"><label>Arm</label>
+          <select id="mir-side"><option value="right">right</option><option value="left">left</option></select>
+          <label>View</label>
+          <select id="mir-plane"><option value="side">side</option><option value="front">front</option><option value="top">top</option></select>
+        </div>
+        <div class="row">
+          <label>Flip</label><input id="mir-mirrored" type="checkbox">
+          <span class="help" style="margin:0">tick if the robot moves backwards</span>
+        </div>
+        <div class="row">
+          <button class="primary" id="mir-start">Start mirroring</button>
+          <button class="danger" id="mir-stop">Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Activity</h2>
+      <pre class="log" id="log"></pre>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const PHASE_COLOURS = {
+  waiting: "var(--muted)", finished: "var(--good)", stopped: "var(--muted)", recording: "var(--bad)",
+  starting: "var(--warn)", preparing: "var(--warn)", calibrating: "var(--warn)", calibrated: "var(--good)",
+  getting_ready: "var(--warn)", demonstrating: "var(--accent)", returning: "var(--muted)",
+  your_turn: "var(--good)", adapting: "var(--warn)", resting: "var(--warn)", mirroring: "var(--accent)", error: "var(--bad)",
+};
+// Coaching phases that get the big banner: [label, colour, pulse]
+const BANNERS = {
+  getting_ready: ["GET READY", "var(--warn)", false],
+  demonstrating: ["START", "var(--accent)", true],
+  returning: ["RESETTING", "var(--muted)", false],
+  your_turn: ["YOUR TURN", "var(--good)", true],
+  calibrating: ["HOLD STILL", "var(--warn)", false],
+};
+let cameraTouched = false;
+let demoTouched = false;      // until the user picks a demo, the newest entry stays selected
+let lastDemos = "";
+let bannerTiming = null;
+
+function showError(message) {
+  $("error").textContent = message;
+  $("error").hidden = false;
+  clearTimeout(showError.timer);
+  showError.timer = setTimeout(() => { $("error").hidden = true; }, 8000);
+}
+
+async function post(path, body = {}) {
+  try {
+    const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const json = await res.json();
+    if (!res.ok) showError(json.error || res.statusText);
+    return json;
+  } catch (e) {
+    showError(`Server unreachable: ${e}`);
+  }
+}
+
+document.querySelectorAll(".tabs button").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b === button));
+    document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== button.dataset.tab; });
+  });
+});
+
+$("camera").addEventListener("input", () => { cameraTouched = true; });
+$("camera-apply").onclick = async () => { await post("/api/camera", { spec: $("camera").value }); cameraTouched = false; };
+$("coach-robot").onchange = () => { $("coach-address").hidden = $("coach-robot").value !== "address"; };
+$("coach-demo").onchange = () => { demoTouched = true; };
+
+$("rec-start").onclick = () => post("/api/record/start", { side: $("rec-side").value, plane: $("rec-plane").value,
+                                                          show_robot: $("rec-robot").checked, mirrored: $("rec-mirrored").checked });
+$("rec-stop").onclick = async () => { await post("/api/record/stop"); demoTouched = false; };
+$("coach-start").onclick = () => {
+  const robot = $("coach-robot").value === "address" ? $("coach-address").value : $("coach-robot").value;
+  post("/api/coach/start", { demo: $("coach-demo").value, robot, reps: Number($("coach-reps").value),
+                             arm: $("coach-arm").value, speak: $("coach-speak").checked });
+};
+$("coach-stop").onclick = () => post("/api/coach/stop");
+$("mir-start").onclick = () => post("/api/mirror/start", { side: $("mir-side").value, plane: $("mir-plane").value,
+                                                          mirrored: $("mir-mirrored").checked });
+$("mir-stop").onclick = () => post("/api/mirror/stop");
+
+function setPill(el, text, on) {
+  el.textContent = text;
+  el.className = "pill " + (on ? "on" : "off");
+}
+
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function renderDemos(demos) {
+  const key = JSON.stringify(demos);
+  if (key === lastDemos) return;
+  lastDemos = key;
+  const select = $("coach-demo");
+  const current = select.value;
+  select.replaceChildren(...demos.map((d) => {
+    const option = document.createElement("option");
+    option.value = d.path;
+    option.textContent = d.label;
+    return option;
+  }));
+  if (demoTouched && demos.some((d) => d.path === current)) select.value = current;
+  else select.selectedIndex = 0;
+}
+
+function renderBanner(s) {
+  const banner = BANNERS[s.phase];
+  if (s.mode !== "coach" || !banner) {
+    $("banner").hidden = true;
+    bannerTiming = null;
+    return;
+  }
+  const info = s.phase_info || {};
+  const [label, colour, pulse] = banner;
+  $("banner").hidden = false;
+  $("banner").style.setProperty("--banner", colour);
+  $("banner").classList.toggle("pulse", pulse);
+  $("banner-label").textContent = label;
+  $("banner-rep").textContent = info.rep ? `Rep ${info.rep}` : "";
+  const tag = $("banner-tag");
+  tag.hidden = info.corrected === undefined || s.phase === "your_turn" || s.phase === "calibrating";
+  tag.textContent = info.corrected ? "corrected motion" : "full taught motion";
+  tag.classList.toggle("corrected", !!info.corrected);
+  $("banner-text").textContent = s.phase === "your_turn" && s.live ? s.live : s.detail;
+  bannerTiming = { elapsedAtPoll: s.now - s.phase_since, polledAt: performance.now(), seconds: info.seconds || 0 };
+}
+
+function tickBanner() {
+  if (bannerTiming && bannerTiming.seconds > 0) {
+    const elapsed = bannerTiming.elapsedAtPoll + (performance.now() - bannerTiming.polledAt) / 1000;
+    const fraction = Math.min(1, Math.max(0, elapsed / bannerTiming.seconds));
+    $("banner-bar").style.width = `${(fraction * 100).toFixed(1)}%`;
+    $("banner-time").textContent = `${Math.max(0, bannerTiming.seconds - elapsed).toFixed(1)} s left of ${bannerTiming.seconds.toFixed(1)} s`;
+  } else if (!$("banner").hidden) {
+    $("banner-bar").style.width = "0%";
+    $("banner-time").textContent = "";
+  }
+  requestAnimationFrame(tickBanner);
+}
+requestAnimationFrame(tickBanner);
+
+function render(s) {
+  $("title").textContent = s.title;
+  $("detail").textContent = s.detail;
+  $("live").textContent = s.live || "";
+  $("status").style.borderLeftColor = PHASE_COLOURS[s.phase] || "var(--muted)";
+  renderBanner(s);
+
+  if (!cameraTouched && document.activeElement !== $("camera")) $("camera").value = s.camera.spec;
+  setPill($("cam-state"), s.camera.error ? "camera: no frames" : `camera: ${s.camera.spec}`, !s.camera.error);
+  setPill($("track-state"), s.tracked ? "arm tracked" : "arm not visible", s.tracked);
+  const ROBOT_PILLS = { off: "robot: off", starting: "robot: starting RViz...", ready: "robot: ready in RViz", error: "robot: failed to start" };
+  setPill($("ros-state"), s.ros ? ROBOT_PILLS[s.robot] || `robot: ${s.robot}` : "ROS not sourced", s.ros && s.robot === "ready");
+
+  const idle = s.mode === "idle";
+  $("camera-apply").disabled = !idle;
+  $("rec-start").disabled = !idle;
+  $("rec-stop").disabled = s.mode !== "record";
+  $("coach-start").disabled = !idle || !s.demos.length;
+  $("coach-stop").disabled = s.mode !== "coach";
+  $("mir-start").disabled = !idle || !s.ros;
+  $("mir-stop").disabled = s.mode !== "mirror";
+  if (s.mode === "record") $("rec-stop").textContent = `Stop & save (${s.recording_frames} frames)`;
+  else $("rec-stop").textContent = "Stop & save";
+
+  renderDemos(s.demos);
+  $("rec-list").textContent = s.recordings.length ? `Latest recordings: ${s.recordings.slice(0, 3).join(", ")}` : "No recordings yet.";
+
+  $("reps").innerHTML = s.reps.length ? s.reps.slice().reverse().map((r) => `
+    <tr>
+      <td>${r.rep}</td>
+      <td class="score" style="color:${r.score >= 75 ? "var(--good)" : "var(--warn)"}">${r.score.toFixed(0)}</td>
+      <td>${escapeHtml(r.reason)}<br><span class="help">${escapeHtml(r.plan_before)} &rarr; ${escapeHtml(r.plan_after)}</span></td>
+    </tr>`).join("") : `<tr><td colspan="3" class="help">No reps yet.</td></tr>`;
+
+  const log = $("log");
+  const atBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
+  log.textContent = s.log.join("\n");
+  if (atBottom) log.scrollTop = log.scrollHeight;
+}
+
+async function poll() {
+  try {
+    render(await (await fetch("/api/state")).json());
+  } catch (e) {
+    $("detail").textContent = "Lost connection to the server.";
+  }
+  setTimeout(poll, 500);
+}
+poll();
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ that frame, divided by the child's arm length, is the same quantity
     python -m therapy.observer                 # live view: features drawn on the video
     python -m therapy.observer --arm right
     python -m therapy.observer --camera clip.mp4
+    python -m therapy.observer --camera http://<phone-ip>:4747/video    # DroidCam / IP Webcam
 
 Keys in the live view: c = calibrate arm length (hold the arm out straight,
 any direction, for two seconds), r = record 5 s and print the Motion, q = quit.
@@ -22,6 +23,7 @@ from typing import Optional
 import cv2
 import numpy as np
 
+from .mjpeg import MjpegStream
 from .motion import Motion, body_frame, elbow_angle_deg, to_hand_vector
 
 MODEL_URL = ("https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
@@ -60,7 +62,7 @@ def ensure_model(path: Path = MODEL_PATH) -> Path:
 
 
 class Observer:
-    """Opens a camera (index or video path) and turns frames into Samples."""
+    """Opens a camera (index, video path or stream URL) and turns frames into Samples."""
 
     def __init__(self, camera=0, arm: str = "left", mirror: bool = True,
                  model_path: Path = MODEL_PATH, smoothing: float = 0.5):
@@ -68,9 +70,13 @@ class Observer:
         from mediapipe.tasks import python as mp_python
         from mediapipe.tasks.python import vision
 
+        # A URL is a live camera too: clock timestamps and a mirrored view, unlike a video file.
+        is_url = isinstance(camera, str) and camera.startswith(("http://", "https://", "rtsp://"))
+        self.is_file = isinstance(camera, str) and not is_url
+
         self.mp, self.vision = mp, vision
         self.arm = arm
-        self.mirror = mirror and not isinstance(camera, str)   # mirror live video only
+        self.mirror = mirror and not self.is_file   # mirror live video only
         self.smoothing = smoothing
         self.arm_length = FALLBACK_ARM_LENGTH_M
         self.calibrated = False
@@ -85,16 +91,21 @@ class Observer:
             min_pose_detection_confidence=0.5, min_tracking_confidence=0.5)
         self.landmarker = vision.PoseLandmarker.create_from_options(opts)
 
-        self.cap = cv2.VideoCapture(camera)
+        if hasattr(camera, "read"):
+            # An already-open capture-like object, e.g. the web interface sharing its camera.
+            self.cap = camera
+        elif is_url and camera.startswith(("http://", "https://")):
+            self.cap = MjpegStream(camera)
+        else:
+            self.cap = cv2.VideoCapture(camera)
         if not self.cap.isOpened():
             raise RuntimeError(f"cannot open camera {camera!r}")
-        self.is_file = isinstance(camera, str)
         self.fps = self.cap.get(cv2.CAP_PROP_FPS) or 30.0
 
     # ---- per frame --------------------------------------------------------
 
     def read(self):
-        """-> (frame_bgr, Sample or None). frame is None at end of a video file."""
+        """-> (frame_bgr, Sample or None). frame is None at end of a video file or when a stream stalls."""
         ok, frame = self.cap.read()
         if not ok:
             return None, None
@@ -220,7 +231,7 @@ def draw_sample(frame, s: Optional[Sample], arm: str, message: str = ""):
 def main():
     import argparse
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--camera", default="0", help="camera index or a video file path")
+    ap.add_argument("--camera", default="0", help="camera index, video file path, or stream URL")
     ap.add_argument("--arm", default="left", choices=["left", "right"], help="the child's arm to watch")
     args = ap.parse_args()
     cam = int(args.camera) if args.camera.isdigit() else args.camera
@@ -235,7 +246,9 @@ def main():
         while True:
             frame, s = obs.read()
             if frame is None:
-                break
+                if obs.is_file:
+                    break
+                continue
             show(frame, s)
             k = cv2.waitKey(1) & 0xFF
             if k == ord("q"):

@@ -9,16 +9,20 @@
     ros2 run bracketbot_moveit_config play_demo.py --serve 5555
 
 The arm first glides from wherever it is to the demo's start pose over
---approach seconds, then plays the demo, so the first point never jumps.
+--approach seconds, plays the demo, then glides back to the start pose over
+--return-time seconds, so every demonstration starts and ends in the same place.
 
 Wire protocol for --serve: one JSON line per request,
-  {"joints": [...], "t": [...], "q": [[...], ...]}   ->   {"ok": true, "duration": s}
-  {"cmd": "ping"}                                    ->   {"ok": true}
-Requests are handled one at a time; the reply is sent when the arm has finished.
+  {"joints": [...], "t": [...], "q": [[...], ...]}
+      ->  {"event": "accepted", "approach": s, "duration": s, "return": s}   as soon as the controller accepts
+      ->  {"ok": true, "duration": s}                                        when the arm has finished
+  {"cmd": "ping"}  ->  {"ok": true}
+Requests are handled one at a time.
 """
 
 import argparse
 import json
+import signal
 import socketserver
 import sys
 from pathlib import Path
@@ -29,6 +33,7 @@ from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from rclpy.signals import SignalHandlerOptions
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 CONTROLLERS = {"r": "right_arm_controller", "l": "left_arm_controller"}
@@ -44,10 +49,18 @@ def _import_therapy():
     return Demo
 
 
+def _point(seconds, positions):
+    p = JointTrajectoryPoint()
+    p.positions = [float(v) for v in positions]
+    p.time_from_start = Duration(sec=int(seconds), nanosec=int((seconds % 1) * 1e9))
+    return p
+
+
 class DemoPlayer(Node):
-    def __init__(self, approach_s: float):
+    def __init__(self, approach_s: float, return_s: float):
         super().__init__("play_demo")
         self.approach_s = approach_s
+        self.return_s = return_s
         self.clients_ = {}
 
     def client(self, controller: str) -> ActionClient:
@@ -55,8 +68,11 @@ class DemoPlayer(Node):
             self.clients_[controller] = ActionClient(self, FollowJointTrajectory, f"/{controller}/follow_joint_trajectory")
         return self.clients_[controller]
 
-    def play(self, joints, t, q) -> float:
-        """Blocking. Returns the trajectory duration (incl. approach) or raises."""
+    def play(self, joints, t, q, on_accepted=None) -> float:
+        """Blocking. Returns the total duration (approach + demo + return) or raises.
+
+        on_accepted(approach_s, demo_s, return_s) is called once the controller has taken the goal.
+        """
         t = np.asarray(t, float)
         q = np.asarray(q, float).reshape(len(t), -1)
         controller = CONTROLLERS.get(joints[0][0], "right_arm_controller")
@@ -66,28 +82,32 @@ class DemoPlayer(Node):
 
         traj = JointTrajectory()
         traj.joint_names = list(joints)
-        for ti, qi in zip(t + self.approach_s, q):
-            p = JointTrajectoryPoint()
-            p.positions = qi.tolist()
-            p.time_from_start = Duration(sec=int(ti), nanosec=int((ti % 1) * 1e9))
-            traj.points.append(p)
+        traj.points = [_point(ti, qi) for ti, qi in zip(t + self.approach_s, q)]
+        return_s = self.return_s if not np.allclose(q[-1], q[0], atol=1e-3) else 0.0
+        if return_s > 0:
+            traj.points.append(_point(t[-1] + self.approach_s + return_s, q[0]))
 
-        goal = FollowJointTrajectory.Goal(trajectory=traj)
-        send = ac.send_goal_async(goal)
+        send = ac.send_goal_async(FollowJointTrajectory.Goal(trajectory=traj))
         rclpy.spin_until_future_complete(self, send)
         handle = send.result()
         if not handle.accepted:
             raise RuntimeError("trajectory rejected by controller")
+        if on_accepted:
+            on_accepted(self.approach_s, float(t[-1]), return_s)
         res = handle.get_result_async()
         rclpy.spin_until_future_complete(self, res)
         code = res.result().result.error_code
         if code != FollowJointTrajectory.Result.SUCCESSFUL:
             raise RuntimeError(f"controller error {code}: {res.result().result.error_string}")
-        return float(t[-1] + self.approach_s)
+        return float(self.approach_s + t[-1] + return_s)
 
 
 def serve(player: DemoPlayer, port: int):
     class Handler(socketserver.StreamRequestHandler):
+        def send(self, message):
+            self.wfile.write((json.dumps(message) + "\n").encode())
+            self.wfile.flush()
+
         def handle(self):
             line = self.rfile.readline()
             if not line:
@@ -98,12 +118,14 @@ def serve(player: DemoPlayer, port: int):
                     reply = {"ok": True}
                 else:
                     player.get_logger().info(f"playing '{req.get('name', '?')}' ({len(req['t'])} pts, {req['t'][-1]:.1f} s)")
-                    dur = player.play(req["joints"], req["t"], req["q"])
+                    dur = player.play(req["joints"], req["t"], req["q"],
+                                      on_accepted=lambda a, d, r: self.send(
+                                          {"event": "accepted", "approach": a, "duration": d, "return": r}))
                     reply = {"ok": True, "duration": dur}
             except Exception as e:  # report to the client instead of dying
                 player.get_logger().error(str(e))
                 reply = {"ok": False, "error": str(e)}
-            self.wfile.write((json.dumps(reply) + "\n").encode())
+            self.send(reply)
 
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", port), Handler) as srv:
@@ -119,12 +141,17 @@ def main():
     ap.add_argument("--size", type=float, default=1.0)
     ap.add_argument("--raw", action="store_true", help="don't clean pauses out of the recording")
     ap.add_argument("--approach", type=float, default=2.0, help="seconds to glide to the start pose")
+    ap.add_argument("--return-time", type=float, default=2.0,
+                    help="seconds to glide back to the start pose afterwards (0 = stay at the end pose)")
     args, ros_args = ap.parse_known_args()
     if not args.csv and args.serve is None:
         ap.error("give a CSV to play, or --serve PORT")
 
-    rclpy.init(args=ros_args)
-    player = DemoPlayer(args.approach)
+    # rclpy's own SIGINT/SIGTERM handlers only shut its context down, which serve_forever() never notices,
+    # so the server outlived every stop. Let both signals end the program instead.
+    rclpy.init(args=ros_args, signal_handler_options=SignalHandlerOptions.NO)
+    signal.signal(signal.SIGTERM, signal.default_int_handler)
+    player = DemoPlayer(args.approach, args.return_time)
     try:
         if args.serve is not None:
             serve(player, args.serve)
@@ -134,7 +161,8 @@ def main():
             if not args.raw:
                 demo = demo.clean()
             demo = demo.adapt(speed=args.speed, size=args.size)
-            print(f"playing {demo.name}: {len(demo)} points, {demo.duration:.1f} s + {args.approach:.1f} s approach")
+            print(f"playing {demo.name}: {len(demo)} points, {args.approach:.1f} s approach + "
+                  f"{demo.duration:.1f} s + {args.return_time:.1f} s return")
             player.play(demo.joints, demo.t, demo.q)
             print("done")
     except KeyboardInterrupt:

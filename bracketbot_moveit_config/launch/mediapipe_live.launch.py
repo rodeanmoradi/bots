@@ -52,6 +52,8 @@ def generate_launch_description():
         DeclareLaunchArgument("preview", default_value="true", description="show the camera window"),
         DeclareLaunchArgument("smoothing", default_value="0.5",
                               description="0 = raw targets, closer to 1 = smoother"),
+        DeclareLaunchArgument("tracker", default_value="true",
+                              description="start arm_xy_node.py; false when something else publishes the landmarks (webui)"),
         DeclareLaunchArgument("rviz", default_value="true"),
         DeclareLaunchArgument("mediapipe_python", default_value=str(REPO_ROOT / "MediaPipe/.venv/bin/python"),
                               description="interpreter with mediapipe installed (MediaPipe/setup_wsl.sh)"),
@@ -77,6 +79,7 @@ def generate_launch_description():
     )
 
     tracker = ExecuteProcess(
+        condition=IfCondition(arg("tracker")),
         cmd=[
             arg("mediapipe_python"), str(REPO_ROOT / "MediaPipe/arm_xy_node.py"), "--ros-args",
             "-p", ["camera:=", arg("camera")],

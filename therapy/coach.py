@@ -242,7 +242,7 @@ def draw_panel(frame, rep: Optional[Rep], plan: Plan, ref: Motion, live_msg: str
 class Coach:
     def __init__(self, demo: Demo, robot: Robot, observer, kin: RobotKinematics,
                  voice: Voice, window: bool = True, record_s: float = 5.0,
-                 session_dir: Optional[Path] = None):
+                 session_dir: Optional[Path] = None, on_status=None):
         self.demo, self.robot, self.obs, self.kin, self.voice = demo, robot, observer, kin, voice
         self.window, self.record_s = window, record_s
         self.full_ref = kin.hand_path(demo)
@@ -253,6 +253,12 @@ class Coach:
             session_dir.mkdir(parents=True, exist_ok=True)
         self._last_rep: Optional[Rep] = None
         self._ref = self.full_ref
+        self.on_status = on_status
+
+    def status(self, phase: str, text: str, **info):
+        """Tell a front end (e.g. webui/server.py) what the coach is doing: on_status(phase, text, info)."""
+        if self.on_status:
+            self.on_status(phase, text, info)
 
     def show(self, frame, sample, msg: str):
         if not self.window:
@@ -277,10 +283,13 @@ class Coach:
     def calibrate(self):
         if getattr(self.obs, "calibrated", True):
             return
+        self.status("calibrating", "Hold your arm out straight so I can measure it.")
         self.voice.say("Hold your arm out straight.")
         self.idle(1.5, "Hold your arm out straight")
         L = self.obs.calibrate(2.0, on_frame=lambda f, s, m: self.show(f, s, m))
         print(f"arm length {L:.3f} m ({'calibrated' if self.obs.calibrated else 'fallback'})")
+        self.status("calibrated", f"Arm length {L:.2f} m" +
+                    ("." if self.obs.calibrated else " (a default: the arm wasn't visible long enough)."))
 
     def rep(self) -> Rep:
         n = len(self.history) + 1
@@ -290,14 +299,31 @@ class Coach:
         if isinstance(self.obs, FakeChild):
             self.obs.ref = ref
 
+        corrected = self.plan != Plan()
+        what = f"corrected motion: {self.plan.describe()}" if corrected else "the full taught motion"
+
+        def on_robot(event, seconds):
+            if event == "approach":
+                self.status("getting_ready", f"Rep {n}: the robot is moving to its start pose.",
+                            rep=n, seconds=seconds, corrected=corrected)
+            elif event == "start":
+                self.voice.say("Start!")
+                self.status("demonstrating", f"Rep {n}: START. Watch the robot ({what}).",
+                            rep=n, seconds=seconds, corrected=corrected, plan=self.plan.describe())
+            elif event == "return":
+                self.status("returning", f"Rep {n}: the robot is going back to its start pose.",
+                            rep=n, seconds=seconds, corrected=corrected)
+
+        self.status("getting_ready", f"Rep {n}: the robot is getting ready.", rep=n, seconds=0.0, corrected=corrected)
         self.voice.say("Watch the robot.")
-        done = self.robot.play_async(demo_i)
+        done = self.robot.play_async(demo_i, on_event=on_robot)
         while not done.is_set():
             frame, s = self.obs.read()
             self.show(frame, s, "Watch the robot")
             if frame is None:
                 done.wait(0.03)
 
+        self.status("your_turn", f"Rep {n}: your turn, copy the robot's movement.", rep=n, seconds=self.record_s)
         self.voice.say("Your turn!")
         child = self.obs.record(self.record_s, on_frame=lambda f, s, m: self.show(f, s, m))
         score = score_attempt(child, ref)
@@ -309,6 +335,9 @@ class Coach:
         self._last_rep = r
         self.voice.say(r.message)
         self.log(r)
+        self.status("adapting", r.message, rep=n, score=score.composite, sub=score.sub, moved=score.moved,
+                    good=score.good(GOOD), weakest=score.weakest() if score.moved else None,
+                    plan_before=r.plan.describe(), plan_after=self.plan.describe())
         return r
 
     def log(self, r: Rep):
@@ -330,6 +359,8 @@ class Coach:
                 if isinstance(self.obs, FakeChild):
                     continue
                 is_rest = r.message.startswith("Let's take a short break")
+                if is_rest:
+                    self.status("resting", "Short break, then a smaller demonstration.")
                 self.idle(10.0 if is_rest else pause_s, r.message)
         except KeyboardInterrupt:
             pass
@@ -344,7 +375,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("demo", help="taught demonstration CSV (from bag_to_csv.py)")
     ap.add_argument("--robot", default="stub", help="'stub', 'stub-fast', or host:port of play_demo.py --serve")
-    ap.add_argument("--child", default="0", help="camera index, video file, or 'fake'")
+    ap.add_argument("--child", "--camera", dest="child", default="0",
+                    help="camera index, video file, stream URL (e.g. http://<phone-ip>:4747/video), or 'fake'")
     ap.add_argument("--arm", default=None, choices=["left", "right"],
                     help="the child's arm (default: mirror of the robot's)")
     ap.add_argument("--reps", type=int, default=8)
@@ -353,7 +385,7 @@ def main():
     ap.add_argument("--urdf", default=str(DEFAULT_URDF))
     ap.add_argument("--no-window", action="store_true")
     ap.add_argument("--quiet", action="store_true", help="no speech")
-    ap.add_argument("--session-dir", default=None, help="where to log reps (default: sessions/<time>)")
+    ap.add_argument("--session-dir", default=None, help="where to log reps (default: local/sessions/<time>, git-ignored)")
     args = ap.parse_args()
 
     demo = Demo.load_csv(args.demo)
@@ -374,7 +406,8 @@ def main():
         obs = Observer(cam, arm=arm)
         realtime = True
     robot = make_robot(args.robot, realtime=realtime)
-    session = Path(args.session_dir) if args.session_dir else Path("sessions") / time.strftime("%Y%m%d-%H%M%S")
+    session = (Path(args.session_dir) if args.session_dir
+               else Path(__file__).resolve().parents[1] / "local" / "sessions" / time.strftime("%Y%m%d-%H%M%S"))
     coach = Coach(demo, robot, obs, kin, Voice(not args.quiet and args.child != "fake"),
                   window=not args.no_window, record_s=args.record_seconds, session_dir=session)
     coach.run(args.reps, pause_s=0.0 if args.child == "fake" else 3.0)
