@@ -1,7 +1,7 @@
 # Velocity/acceleration limits used for trajectory timing. These override the
 # URDF's values (10 rad/s, which is not a real limit) with something that
-# looks like a therapy demonstration rather than a whip. Position limits still
-# come from the URDF.
+# looks like a therapy demonstration rather than a whip. Position limits come
+# from the URDF, except the elbows (rj3/lj3) below.
 #
 # Scaling factors apply on top; RViz's MotionPlanning panel can raise them per
 # request (<= 1.0).
@@ -15,13 +15,15 @@ joint_limits:
   # arm joints (rad/s)
   rj1: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   rj2: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
-  rj3: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  # Elbows bend one way only, like a human's: positive rj3/lj3 swings the hand forward,
+  # negative would hyperextend it backwards. URDF range is +-2.094395.
+  rj3: {has_position_limits: true, min_position: 0.0, max_position: 2.094395, has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   rj4: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   rj5: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   rj6: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   lj1: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   lj2: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
-  lj3: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
+  lj3: {has_position_limits: true, min_position: 0.0, max_position: 2.094395, has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   lj4: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   lj5: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
   lj6: {has_velocity_limits: true, max_velocity: 1.5, has_acceleration_limits: true, max_acceleration: 2.0}
