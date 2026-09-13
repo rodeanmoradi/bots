@@ -81,8 +81,21 @@ moves only the first finger there.
         --joints rj0 rj1 rj2 rj3 rj4 rj5 rj6      # right arm only
 
 The CSV is `t, <joint>, <joint>, ...` at the joint_state_broadcaster's rate
-(100 Hz). That table *is* the demonstration: play it back by streaming the
-rows to the arm controller, or use it as training data.
+(100 Hz). That table *is* the demonstration.
+
+## Playing a demonstration
+
+    ros2 run bracketbot_moveit_config play_demo.py reach_01.csv
+    ros2 run bracketbot_moveit_config play_demo.py reach_01.csv --speed 0.5 --size 0.5
+
+Pauses between the teleop's moves are cut out first (`--raw` keeps them); the
+arm glides to the start pose over 2 s, then plays. For the therapy loop, run
+it as a server and point `therapy/coach.py` at this machine:
+
+    ros2 run bracketbot_moveit_config play_demo.py --serve 5555
+
+It needs the `therapy` package importable (it is, via the repo checkout; or
+`export PYTHONPATH=/path/to/bots:$PYTHONPATH`).
 
 ## What's in `config/`
 

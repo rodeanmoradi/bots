@@ -10,3 +10,9 @@ ros2_ws/log/
 # Python
 __pycache__/
 *.pyc
+
+# therapy coach session logs
+sessions/
+
+# therapy venv (see therapy/requirements.txt)
+.venv-therapy/

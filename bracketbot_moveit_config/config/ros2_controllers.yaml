@@ -21,6 +21,7 @@ right_arm_controller:
     command_interfaces: [position]
     state_interfaces: [position, velocity]
     allow_nonzero_velocity_at_trajectory_end: true
+    allow_partial_joints_goal: true   # play_demo.py may send a subset of the arm's joints
 
 left_arm_controller:
   ros__parameters:
@@ -28,6 +29,7 @@ left_arm_controller:
     command_interfaces: [position]
     state_interfaces: [position, velocity]
     allow_nonzero_velocity_at_trajectory_end: true
+    allow_partial_joints_goal: true   # play_demo.py may send a subset of the arm's joints
 
 right_gripper_controller:
   ros__parameters:

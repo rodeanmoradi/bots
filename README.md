@@ -71,5 +71,6 @@ warning. For IK the arm base link is `arm_base` and the end effectors are
 | `chopped_urdf_v2/` | BracketBot URDF + meshes (ROS 2 package) |
 | `chopped_urdf_v2_gazebo/`, `gazebo_sim/` | Gazebo Sim physics setup |
 | `bracketbot_moveit_config/` | MoveIt 2: RViz interactive-marker teleop + demo recording (see its README) |
+| `therapy/` | the AOT loop: sim robot demonstrates → webcam pose estimation scores the child → demo adapts (no ROS; see its README) |
 | `ros2_ws/` | colcon workspace (symlinks to the packages above) |
 | `docker/` | ROS 2 + MoveIt + Gazebo container for machines without ROS (`./docker/run.sh`) |
